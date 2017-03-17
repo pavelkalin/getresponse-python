@@ -6,7 +6,7 @@
 Python wrapper for GetResponse API 3
 
 
-##Introduction
+## Introduction
 
 
 This library provides a pure Python interface for the [GetResponse API 3](http://apidocs.getresponse.com/v3). 
@@ -16,7 +16,7 @@ _It is_
 >All-in-one Online Marketing Platform to Grow Your Business
 
 
-##Installing
+## Installing
 
 ```commandline
 git@github.com:pavelkalin/getresponse-python.git
@@ -41,7 +41,7 @@ Tests can be run via nose like this with coverage:
 nosetest --with-coverage
 ```
 
-##Usage
+## Usage
 
 Obtain API_KEY, API_ENDPOINT and X_DOMAIN if GetResponse 360 is used. <br />
 For GetResponse it's enough to have just API_KEY and API_ENDPOINT <br />
@@ -61,14 +61,14 @@ print(campaigns)
 
 ```
 
-##Description
+## Description
 
 This API wrapper should mimic the original [documentation](http://apidocs.getresponse.com/v3/resources) <br />
 However original documentaion is still evolving (new API methods are added) and this wrapper is still being builded, so feel free to fork this repo and change/update/add it however you like.  
 
 At this stage please use it AS IS and consult with documentation [here](http://apidocs.getresponse.com/v3/resources)
 
-##Todo
+## Todo
 
 - [ ] readthedocs
 - [ ] installing via pip 
@@ -76,7 +76,7 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 - [ ] more examples
 - [ ] live cases
 
-###Project tree
+### Project tree
 
 ```commandline
 |── LICENSE
@@ -99,7 +99,7 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 
 ```
 
-###Author
+### Author
 
 Pavel Kalinichenko <br /> [pavel.kalinichenko@getresponse.ru](mailto:pavel.kalinichenko@getresponse.ru) <br />
  [pavel.kalinichenko@gmail.com](mailto:pavel.kalinichenko@gmail.com) 
