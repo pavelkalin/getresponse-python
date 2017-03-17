@@ -1,0 +1,55 @@
+{
+  "languageCode": "RU",
+  "confirmation": {
+    "mimeType": "text/html",
+    "replyTo": {
+      "fromFieldId": "e",
+      "href": "https://api3.getresponse360.pl/v3/from-fields/e"
+    },
+    "subscriptionConfirmationSubjectId": "e1mT",
+    "redirectUrl": "",
+    "fromField": {
+      "fromFieldId": "e",
+      "href": "https://api3.getresponse360.pl/v3/from-fields/e"
+    },
+    "subscriptionConfirmationBodyId": "e1IM",
+    "redirectType": "hosted"
+  },
+  "createdOn": "2017-03-17T13:50:32+0000",
+  "name": "test_camp",
+  "isDefault": "false",
+  "profile": {
+    "logo": "",
+    "industryTagId": "",
+    "logoLinkUrl": "",
+    "description": "",
+    "title": ""
+  },
+  "optinTypes": {
+    "email": "double",
+    "import": "double",
+    "api": "double",
+    "webform": "double"
+  },
+  "href": "https://api3.getresponse360.pl/v3/campaigns/e",
+  "subscriptionNotifications": {
+    "recipients": [
+      {
+        "fromFieldId": "e",
+        "href": "https://api3.getresponse360.pl/v3/from-fields/e"
+      }
+    ],
+    "status": "enabled"
+  },
+  "postal": {
+    "country": "Russian Federation",
+    "companyName": "GetResponse",
+    "street": "NA",
+    "city": "NA",
+    "zipCode": "123456",
+    "state": "NA",
+    "design": "[[name]], [[address]], [[city]], [[state]] [[zip]], [[country]]",
+    "addPostalToMessages": "true"
+  },
+  "campaignId": "e"
+}

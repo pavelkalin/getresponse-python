@@ -1,5 +1,7 @@
 """A library that provides a Python interface to the GetResponse API"""
 import requests
+from collections import defaultdict
+import json
 
 
 class Api(object):
@@ -37,7 +39,7 @@ class Api(object):
         http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.get.all
         :param kwargs: options: search string like ?page=1&perPage=100&sort[name]=asc
                        name: campaign name
-        :return: JSON return object
+        :return: JSON response
         """
         r = None
         if not kwargs:
@@ -50,7 +52,119 @@ class Api(object):
                 r = requests.get(self.API_ENDPOINT + '/campaigns?query[name]=' + kwargs['name'], headers=self.HEADERS)
         return r.json()
 
+    def get_campaign(self, id: str):
+        """
+        Get campaign details by id
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.get
+        :param id: Id of campaign
+        :return: JSON response
+        """
+
+        r = requests.get(self.API_ENDPOINT + '/campaigns/' + id, headers=self.HEADERS)
+        return r.json()
+
+    @staticmethod
+    def _get_confirmation(from_field: dict, reply_to: dict, redirect_type: str, redirect_url: str = None):
+        """
+        Subscription confirmation email settings
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.create
+        :param from_field: dict {"fromFieldId": 'xxx'} FromFieldId from from-fields resources
+        :param reply_to: dict {"fromFieldId": 'xxx'} FromFieldId from from-fields resources
+        :param redirect_type: What will happen after confirmation of email. Possible values: hosted (subscriber will stay on GetResponse website), customUrl (subscriber will be redirected to provided url)
+        :param redirect_url: Url where subscriber will be redirected if redirectType is set to customUrl
+        :return: dict
+        """
+        if redirect_url:
+            response = {"fromField": from_field, "replyTo": reply_to, "redirectType": redirect_type,
+                        "redirectUrl": redirect_url}
+        else:
+            response = {"fromField": from_field, "replyTo": reply_to, "redirectType": redirect_type}
+        return response
+
+    @staticmethod
+    def _get_profile(industry_tag_id: int, description: str, logo: str, logo_link_url: str, title: str):
+        """
+        How campaign will be visible for subscribers
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.create
+        :param industry_tag_id: Category of content of campaign
+        :param description: Short description of campaign content, length 2-255
+        :param logo: Url of image displayed as campaign logo
+        :param logo_link_url: Url of link in campaign logo
+        :param title: Title of campaign, length 2-64
+        :return: dict
+        """
+        response = {"industryTagId": industry_tag_id, "description": description, "logo": logo,
+                    "logoLinkUrl": logo_link_url, "title": title}
+        return response
+
+    @staticmethod
+    def _get_postal(add_postal_to_messages: str, city: str, company_name: str, design: str, state: str, street: str,
+                    zipcode: str):
+        """
+        Postal address of your company
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.create
+        :param add_postal_to_messages: Should postal address be sent with all messages from campaign. (For US and Canada it's mandatory)
+        :param city: City
+        :param company_name: Company name
+        :param design: How postal address would be designed in emails. Avaiable fields definitions: [[name]], [[address]], [[city]], [[state]] [[zip]], [[country]]
+        :param state: State
+        :param street: Street
+        :param zipcode: Zip code
+        :return: dict
+        """
+        response = {"addPostalToMessages": add_postal_to_messages, "city": city, "companyName": company_name,
+                    "design": design, "state": state, "street": street, "zipCode": zipcode}
+        return response
+
+    @staticmethod
+    def _get_option_types(email: str, import_type: str, webform: str):
+        """
+        How subscribers will be added to list - with double (with confirmation) or single optin
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.create
+        :param email: Optin type for subscriptions via email. Possible values: single, double
+        :param import_type: Optin type for subscriptions via import. Possible values: single, double
+        :param webform: Optin type for subscriptions via webforms and landing pages. Possible values: single, double
+        :return: dict
+        """
+        response = {"email": email, "import": import_type, "webform": webform}
+        return response
+
+    @staticmethod
+    def _get_subscription_notifications(status: str, recipients: list):
+        """
+        Notifications for each subscribed email to Your list
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.create
+        :param status: Are notifications enabled. Possible values: enabled, disabled
+        :param recipients: Emails where to send notifications. They have to be defined in account from fields
+        :return: dict
+        """
+        response = {"status": status, "recipients": recipients}
+        return response
+
+    def post_campaign(self, name: str, **kwargs):
+        """
+        Create new campaign
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.create
+        :param name: Campaign name which has to be unique in whole GetResponse platform
+        :param kwargs:
+                -language_code: Campaign language code (2 letters format)
+                -is_default: Possible values: true, false. Is campaign default for account. You cannot remove default flag, only reassign it to other campaign.
+                -confirmation: Subscription confirmation email settings. Dict from _get_confirmation method
+                -profile: How campaign will be visible for subscribers. Dict from _get_profile
+                -postal: Postal address of your company. Dict from _get_postal
+                -option_types: How subscribers will be added to list - with double (with confirmation) or single optin. Dict from  _get_option_types
+                -subscription_notifications: Notifications for each subscribed email to Your list.  Dict from _get_subscription_notifications
+        :return: JSON response
+        """
+        data = defaultdict()
+        data['name'] = name
+        for key, value in kwargs.items():
+            data[key] = value
+        r = requests.post(self.API_ENDPOINT + '/campaigns', headers=self.HEADERS, data=json.dumps(data))
+        return r.json()
+
 
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod()
