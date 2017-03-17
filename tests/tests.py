@@ -41,7 +41,7 @@ class TestApi(TestCase):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
         self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns')
-        todos = [{"userId": 1,"id": 1,"title": "Make the bed","completed": "False"}]
+        todos = [{"userId": 1, "id": 1, "title": "Make the bed", "completed": "False"}]
 
         response = self.getresponse.get_campaigns()
 
