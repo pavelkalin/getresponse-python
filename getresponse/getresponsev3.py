@@ -147,13 +147,13 @@ class Api(object):
         http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.create
         :param name: Campaign name which has to be unique in whole GetResponse platform
         :param kwargs:
-                -language_code: Campaign language code (2 letters format)
-                -is_default: Possible values: true, false. Is campaign default for account. You cannot remove default flag, only reassign it to other campaign.
+                -languageCode: Campaign language code (2 letters format)
+                -isDefault: Possible values: true, false. Is campaign default for account. You cannot remove default flag, only reassign it to other campaign.
                 -confirmation: Subscription confirmation email settings. Dict from _get_confirmation method
                 -profile: How campaign will be visible for subscribers. Dict from _get_profile
                 -postal: Postal address of your company. Dict from _get_postal
-                -option_types: How subscribers will be added to list - with double (with confirmation) or single optin. Dict from  _get_option_types
-                -subscription_notifications: Notifications for each subscribed email to Your list.  Dict from _get_subscription_notifications
+                -optinTypes: How subscribers will be added to list - with double (with confirmation) or single optin. Dict from  _get_option_types
+                -subscriptionNotifications: Notifications for each subscribed email to Your list.  Dict from _get_subscription_notifications
         :return: JSON response
         """
         data = defaultdict()
@@ -161,6 +161,80 @@ class Api(object):
         for key, value in kwargs.items():
             data[key] = value
         r = requests.post(self.API_ENDPOINT + '/campaigns', headers=self.HEADERS, data=json.dumps(data))
+        return r.json()
+
+    def update_campaign(self, campaign_id: str, **kwargs):
+        """
+        Allows to update campaign prefenrences. Send only those fields that need to be changed.
+        The rest of properties will stay the same.
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.update
+        :param campaign_id: Id of campaign to update
+        :param kwargs:
+                -languageCode: Campaign language code (2 letters format)
+                -isDefault: Possible values: true, false. Is campaign default for account. You cannot remove default flag, only reassign it to other campaign.
+                -confirmation: Subscription confirmation email settings. Dict from _get_confirmation method
+                -profile: How campaign will be visible for subscribers. Dict from _get_profile
+                -postal: Postal address of your company. Dict from _get_postal
+                -optinTypes: How subscribers will be added to list - with double (with confirmation) or single optin. Dict from  _get_option_types
+                -subscriptionNotifications: Notifications for each subscribed email to Your list.  Dict from _get_subscription_notifications
+        :return: JSON response
+        """
+        data = defaultdict()
+        for key, value in kwargs.items():
+            data[key] = value
+        r = requests.post(self.API_ENDPOINT + '/campaigns/' + campaign_id, headers=self.HEADERS, data=json.dumps(data))
+        return r.json()
+
+    # todo Update query to handle multiple criterias
+    def get_campaign_contacts(self, campaign_id: str, query=None, **kwargs):
+        """
+        Allows to retrieve all contacts from given campaigns. Standard sorting and filtering apply.
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.contacts.get
+        :param campaign_id: Id of given campaign
+        :param query: Used to search only resources that meets criteria. Can be:
+                                        - email
+                                        - name
+                                        - createdOn[from]
+                                        - createdOn[to]
+            Should be passed like this: query = 'email=searched query'.
+            Examples:
+                    query = 'email=@gmail.com'
+                    query = 'createdOn[from]=2017-03-10'
+        :param kwargs:
+            - fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+            - sort: Enable sorting using specified field (set as a key) and order (set as a value).
+            multiple fields to sort by can be used.
+            - page: Specify which page of results return. :rtype: int
+            - perPage: Specify how many results per page should be returned :rtype: int
+        :return: JSON response
+        """
+        q = False  # check whether there was a query in a call
+        url = str(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/contacts')
+        if query:
+            query_data = str(query).split('=')
+            url += '?'
+            url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+            q = True
+
+        if kwargs:
+            if not q: url += '?'
+            for key, value in kwargs.items():
+                url = url + str(key) + '=' + str(value) + '&'
+        url = url[:-1]  # get rid of last &
+        r = requests.get(url, headers=self.HEADERS)
+        return r.json()
+
+    def get_campaign_blacklist(self, campaign_id: str, mask: str):
+        """
+        This request allows to fetch blacklist for given campaign.
+        Blacklist is simple plain collection of email addresses or partial masks (like @gmail.com)
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.blacklists.get
+        :param campaign_id: Id of campaign
+        :param mask: Blacklist mask to search for
+        :return: JSON response
+        """
+        r = requests.get(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/blacklists?query[mask]=' + mask,
+                         headers=self.HEADERS)
         return r.json()
 
 

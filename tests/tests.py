@@ -72,13 +72,85 @@ class TestApi(TestCase):
         self.mock_post.return_value = MagicMock()
         self.mock_post.return_value.json.return_value = TestApi._open_test_data('post_campaign')
         data = json.loads(json.dumps(
-            {'languageCode': 'RU', 'confirmation': {'mimeType': 'text/html', 'replyTo': {'fromFieldId': 'e', 'href': 'https://api3.getresponse360.pl/v3/from-fields/e'}, 'subscriptionConfirmationSubjectId': 'e1mT', 'redirectUrl': '', 'fromField': {'fromFieldId': 'e', 'href': 'https://api3.getresponse360.pl/v3/from-fields/e'}, 'subscriptionConfirmationBodyId': 'e1IM', 'redirectType': 'hosted'}, 'createdOn': '2017-03-17T13:50:32+0000', 'name': 'test_camp', 'isDefault': 'false', 'profile': {'logo': '', 'industryTagId': '', 'logoLinkUrl': '', 'description': '', 'title': ''}, 'optinTypes': {'email': 'double', 'import': 'double', 'api': 'double', 'webform': 'double'}, 'href': 'https://api3.getresponse360.pl/v3/campaigns/e', 'subscriptionNotifications': {'recipients': [{'fromFieldId': 'e', 'href': 'https://api3.getresponse360.pl/v3/from-fields/e'}], 'status': 'enabled'}, 'postal': {'country': 'Russian Federation', 'companyName': 'GetResponse', 'street': 'NA', 'city': 'NA', 'zipCode': '123456', 'state': 'NA', 'design': '[[name]], [[address]], [[city]], [[state]] [[zip]], [[country]]', 'addPostalToMessages': 'true'}, 'campaignId': 'e'}))
+            {'languageCode': 'RU', 'confirmation': {'mimeType': 'text/html', 'replyTo': {'fromFieldId': 'e',
+                                                                                         'href': 'https://api3.getresponse360.pl/v3/from-fields/e'},
+                                                    'subscriptionConfirmationSubjectId': 'e1mT', 'redirectUrl': '',
+                                                    'fromField': {'fromFieldId': 'e',
+                                                                  'href': 'https://api3.getresponse360.pl/v3/from-fields/e'},
+                                                    'subscriptionConfirmationBodyId': 'e1IM', 'redirectType': 'hosted'},
+             'createdOn': '2017-03-17T13:50:32+0000', 'name': 'test_camp', 'isDefault': 'false',
+             'profile': {'logo': '', 'industryTagId': '', 'logoLinkUrl': '', 'description': '', 'title': ''},
+             'optinTypes': {'email': 'double', 'import': 'double', 'api': 'double', 'webform': 'double'},
+             'href': 'https://api3.getresponse360.pl/v3/campaigns/e', 'subscriptionNotifications': {
+                'recipients': [{'fromFieldId': 'e', 'href': 'https://api3.getresponse360.pl/v3/from-fields/e'}],
+                'status': 'enabled'},
+             'postal': {'country': 'Russian Federation', 'companyName': 'GetResponse', 'street': 'NA', 'city': 'NA',
+                        'zipCode': '123456', 'state': 'NA',
+                        'design': '[[name]], [[address]], [[city]], [[state]] [[zip]], [[country]]',
+                        'addPostalToMessages': 'true'}, 'campaignId': 'e'}))
 
-        response = self.getresponse.post_campaign('test_camp', language_code='RU')
+        response = self.getresponse.post_campaign('test_camp', languageCode='RU')
 
         self.assertEqual(response, data)
         self.assertEqual(response['campaignId'], data['campaignId'])
 
+    def test_update_campaign(self):
+        self.mock_post.return_value.ok = True
+        self.mock_post.return_value = MagicMock()
+        self.mock_post.return_value.json.return_value = TestApi._open_test_data('update_campaign')
+        data = json.loads(json.dumps({'confirmation': {'redirectType': 'hosted',
+                                                       'subscriptionConfirmationBodyId': 'e1IM',
+                                                       'replyTo': {'fromFieldId': 'e',
+                                                                   'href': 'https://api3.getresponse360.pl/v3/from-fields/e'},
+                                                       'mimeType': 'text/html', 'redirectUrl': None,
+                                                       'fromField': {'fromFieldId': 'e',
+                                                                     'href': 'https://api3.getresponse360.pl/v3/from-fields/e'},
+                                                       'subscriptionConfirmationSubjectId': 'e1mT'},
+                                      'postal': {'city': 'NA',
+                                                 'design': '[[name]], [[address]], [[city]], [[state]] [[zip]], [[country]]',
+                                                 'addPostalToMessages': 'true', 'country': 'Russian Federation',
+                                                 'state': 'NA', 'zipCode': '123456', 'street': 'NA',
+                                                 'companyName': 'GetResponse'},
+                                      'profile': {'logo': '', 'logoLinkUrl': '', 'description': '',
+                                                  'industryTagId': None, 'title': ''}, 'name': 'test_camp',
+                                      'optinTypes': {'api': 'double', 'import': 'single', 'email': 'single',
+                                                     'webform': 'single'}, 'campaignId': 'e', 'languageCode': 'RU',
+                                      'isDefault': 'false', 'subscriptionNotifications': {'status': 'enabled',
+                                                                                          'recipients': [
+                                                                                              {'fromFieldId': 'e',
+                                                                                               'href': 'https://api3.getresponse360.pl/v3/from-fields/e'}]},
+                                      'href': 'https://api3.getresponse360.pl/v3/campaigns/e',
+                                      'createdOn': '2017-03-17T13:50:32+0000'}))
+
+        response = self.getresponse.update_campaign(campaign_id='e',
+                                                    optinTypes=Api._get_option_types(email='single',
+                                                                                     import_type='single',
+                                                                                     webform='single'))
+
+        self.assertEqual(response, data)
+        self.assertEqual(response['campaignId'], data['campaignId'])
+
+    def test_get_campaign_contacts(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaign_contacts')
+        data = json.loads(json.dumps([{'email': 'xxx@yandex.ru', 'name': 'Yandex', 'contactId': 'F'}]))
+
+        response = self.getresponse.get_campaign_contacts('O', query='email=ru', fields='name,email,campaigns')
+
+        self.assertEqual(response, data)
+        self.assertEqual(response[0]['contactId'], data[0]['contactId'])
+
+    def test_get_campaign_blacklist(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaign_blacklist')
+        data = json.loads(json.dumps({'masks': ['spam-spam@gmail.com', 'spam@gmail.com']}))
+
+        response = self.getresponse.get_campaign_blacklist('O', 'gmail.com')
+
+        self.assertEqual(response, data)
+        self.assertTrue(str(response).find('gmail.com') > 0)
 
 if __name__ == '__main__':
     unittest.main()

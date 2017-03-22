@@ -93,8 +93,9 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 ├── testdata
 │   ├── get_campaign_id.json
 │   └── get_campaigns.json
+│   └── post_campaign.json
+│   └── ...
 └── tests
-    ├── __init__.py
     └── tests.py
 
 ```
