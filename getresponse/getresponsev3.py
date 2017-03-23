@@ -37,7 +37,7 @@ class Api(object):
         """
         Get all campaigns within account
         http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.get.all
-        :param kwargs: options: search string like ?page=1&perPage=100&sort[name]=asc
+        :param kwargs: options: search string like page=1&perPage=100&sort[name]=asc
                        name: campaign name
         :return: JSON response
         """
@@ -52,15 +52,15 @@ class Api(object):
                 r = requests.get(self.API_ENDPOINT + '/campaigns?query[name]=' + kwargs['name'], headers=self.HEADERS)
         return r.json()
 
-    def get_campaign(self, id: str):
+    def get_campaign(self, campaign_id: str):
         """
         Get campaign details by id
         http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.get
-        :param id: Id of campaign
+        :param campaign_id: Id of campaign
         :return: JSON response
         """
 
-        r = requests.get(self.API_ENDPOINT + '/campaigns/' + id, headers=self.HEADERS)
+        r = requests.get(self.API_ENDPOINT + '/campaigns/' + campaign_id, headers=self.HEADERS)
         return r.json()
 
     @staticmethod
@@ -185,8 +185,7 @@ class Api(object):
         r = requests.post(self.API_ENDPOINT + '/campaigns/' + campaign_id, headers=self.HEADERS, data=json.dumps(data))
         return r.json()
 
-    # todo Update query to handle multiple criterias
-    def get_campaign_contacts(self, campaign_id: str, query=None, **kwargs):
+    def get_campaign_contacts(self, campaign_id: str, query: list = None, **kwargs):
         """
         Allows to retrieve all contacts from given campaigns. Standard sorting and filtering apply.
         http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.contacts.get
@@ -196,10 +195,10 @@ class Api(object):
                                         - name
                                         - createdOn[from]
                                         - createdOn[to]
-            Should be passed like this: query = 'email=searched query'.
+            Should be passed like this: query = ['email=searched query', ..]
             Examples:
-                    query = 'email=@gmail.com'
-                    query = 'createdOn[from]=2017-03-10'
+                    query = ['email=@gmail.com','createdOn[from]=2017-03-10']
+                    query = ['createdOn[from]=2017-03-10']
         :param kwargs:
             - fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
             - sort: Enable sorting using specified field (set as a key) and order (set as a value).
@@ -211,13 +210,14 @@ class Api(object):
         q = False  # check whether there was a query in a call
         url = str(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/contacts')
         if query:
-            query_data = str(query).split('=')
             url += '?'
-            url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
             q = True
-
+            for item in query:
+                query_data = str(item).split('=')
+                url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
         if kwargs:
-            if not q: url += '?'
+            if not q:
+                url += '?'
             for key, value in kwargs.items():
                 url = url + str(key) + '=' + str(value) + '&'
         url = url[:-1]  # get rid of last &
@@ -235,6 +235,239 @@ class Api(object):
         """
         r = requests.get(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/blacklists?query[mask]=' + mask,
                          headers=self.HEADERS)
+        return r.json()
+
+    def post_campaign_blacklist(self, campaign_id: str, mask: list):
+        """
+        This request allows to update blacklist. Full list is expected.
+        This list will replace the present list
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.blacklists.update
+        :param campaign_id: Id of campaign
+        :param mask: Blacklist mask
+        :return: JSON response
+        """
+        data = {'masks': mask}
+        r = requests.post(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/blacklists',
+                          headers=self.HEADERS, data=json.dumps(data))
+        return r.json()
+
+    @staticmethod
+    def _prepare_url_from_query(url: str, query: list, campaign_id: str):
+        """
+        Method to populate url with query and campaign id
+        :param url: str
+        :param query: list like this ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+        :param campaign_id: Id of campaign.
+        :return:
+        """
+        url = url + 'query[campaignId]=' + campaign_id + '&'
+        for item in query:
+            query_data = str(item).split('=')
+            url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+        return url
+
+    def get_campaigns_statistics_list_size(self, query: list, campaign_id: str, fields: str = None):
+        """
+        Get list size for found campaigns
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.statistics.list-size
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - groupBy String. Can be:
+                                            - hour
+                                            - day
+                                            - month
+                                            - total
+                        - createdOn[from] Date in YYYY-mm-dd
+                        - createdOn[to] Date in YYYY-mm-dd
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn[from]=2017-03-10']
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
+        :return: JSON response
+        """
+        url = str(self.API_ENDPOINT + '/campaigns/statistics/list-size?')
+        url = Api._prepare_url_from_query(url, query, campaign_id)
+        if fields:
+            url += 'fields=' + fields
+        else:
+            url = url[:-1]  # get rid of last &
+        r = requests.get(url, headers=self.HEADERS)
+        return r.json()
+
+    def get_campaigns_statistics_locations(self, query: list, campaign_id: str, fields: str = None):
+        """
+        Get locations for found campaigns
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.statistics.locations
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - groupBy String. Can be:
+                                            - hour
+                                            - day
+                                            - month
+                                            - total
+                        - createdOn[from] Date in YYYY-mm-dd
+                        - createdOn[to] Date in YYYY-mm-dd
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn[from]=2017-03-10']
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
+        :return: JSON response
+        """
+        url = str(self.API_ENDPOINT + '/campaigns/statistics/locations?')
+        url = Api._prepare_url_from_query(url, query, campaign_id)
+        if fields:
+            url += 'fields=' + fields
+        else:
+            url = url[:-1]  # get rid of last &
+        r = requests.get(url, headers=self.HEADERS)
+        return r.json()
+
+    def get_campaigns_statistics_origins(self, query: list, campaign_id: str, fields: str = None):
+        """
+        Get origins for found campaigns
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.statistics.locations
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - groupBy String. Can be:
+                                            - hour
+                                            - day
+                                            - month
+                                            - total
+                        - createdOn[from] Date in YYYY-mm-dd
+                        - createdOn[to] Date in YYYY-mm-dd
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn[from]=2017-03-10']
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
+        :return: JSON response
+        """
+        url = str(self.API_ENDPOINT + '/campaigns/statistics/origins?')
+        url = Api._prepare_url_from_query(url, query, campaign_id)
+        if fields:
+            url += 'fields=' + fields
+        else:
+            url = url[:-1]  # get rid of last &
+        r = requests.get(url, headers=self.HEADERS)
+        return r.json()
+
+    def get_campaigns_statistics_removals(self, query: list, campaign_id: str, fields: str = None):
+        """
+        Get removals for found campaigns
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.statistics.removals
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - groupBy String. Can be:
+                                            - hour
+                                            - day
+                                            - month
+                                            - total
+                        - createdOn[from] Date in YYYY-mm-dd
+                        - createdOn[to] Date in YYYY-mm-dd
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn[from]=2017-03-10']
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
+        :return: JSON response
+        """
+        url = str(self.API_ENDPOINT + '/campaigns/statistics/removals?')
+        url = Api._prepare_url_from_query(url, query, campaign_id)
+        if fields:
+            url += 'fields=' + fields
+        else:
+            url = url[:-1]  # get rid of last &
+        r = requests.get(url, headers=self.HEADERS)
+        return r.json()
+
+    def get_campaigns_statistics_subscriptions(self, query: list, campaign_id: str, fields: str = None):
+        """
+        Get removals for found campaigns
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.statistics.subscriptions
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - groupBy String. Can be:
+                                            - hour
+                                            - day
+                                            - month
+                                            - total
+                        - createdOn[from] Date in YYYY-mm-dd
+                        - createdOn[to] Date in YYYY-mm-dd
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn[from]=2017-03-10']
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
+        :return: JSON response
+        """
+        url = str(self.API_ENDPOINT + '/campaigns/statistics/subscriptions?')
+        url = Api._prepare_url_from_query(url, query, campaign_id)
+        if fields:
+            url += 'fields=' + fields
+        else:
+            url = url[:-1]  # get rid of last &
+        r = requests.get(url, headers=self.HEADERS)
+        return r.json()
+
+    def get_campaigns_statistics_balance(self, query: list, campaign_id: str, fields: str = None):
+        """
+        Get balance for found campaigns (i.e. subscriptions and removals)
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.get.balance
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - groupBy String. Can be:
+                                            - hour
+                                            - day
+                                            - month
+                                            - total
+                        - createdOn[from] Date in YYYY-mm-dd
+                        - createdOn[to] Date in YYYY-mm-dd
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn[from]=2017-03-10']
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
+        :return: JSON response
+        """
+        url = str(self.API_ENDPOINT + '/campaigns/statistics/balance?')
+        url = Api._prepare_url_from_query(url, query, campaign_id)
+        if fields:
+            url += 'fields=' + fields
+        else:
+            url = url[:-1]  # get rid of last &
+        r = requests.get(url, headers=self.HEADERS)
+        return r.json()
+
+    def get_campaigns_statistics_summary(self, campaign_id_list: str, fields: str = None):
+        """
+        Get summary for found campaigns (i.e. subscriptions and removals)
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.get.summary
+        :param campaign_id_list: List of campaigns. Fields should be separated by comma
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :return: JSON response
+        """
+        url = str(self.API_ENDPOINT + '/campaigns/statistics/summary?')
+        url = Api._prepare_url_from_query(url, [], campaign_id_list)
+        if fields:
+            url += 'fields=' + fields
+        else:
+            url = url[:-1]  # get rid of last &
+        print(url)
+        r = requests.get(url, headers=self.HEADERS)
         return r.json()
 
 

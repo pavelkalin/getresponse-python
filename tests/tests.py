@@ -2,6 +2,7 @@ import json
 import os
 import unittest
 from unittest import TestCase, skipIf
+import nose
 from collections import defaultdict
 
 from mock import patch, MagicMock
@@ -136,7 +137,7 @@ class TestApi(TestCase):
         self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaign_contacts')
         data = json.loads(json.dumps([{'email': 'xxx@yandex.ru', 'name': 'Yandex', 'contactId': 'F'}]))
 
-        response = self.getresponse.get_campaign_contacts('O', query='email=ru', fields='name,email,campaigns')
+        response = self.getresponse.get_campaign_contacts('O', query=['email=ru'], fields='name,email,campaigns')
 
         self.assertEqual(response, data)
         self.assertEqual(response[0]['contactId'], data[0]['contactId'])
@@ -152,5 +153,98 @@ class TestApi(TestCase):
         self.assertEqual(response, data)
         self.assertTrue(str(response).find('gmail.com') > 0)
 
+    def test_post_campaign_blacklist(self):
+        self.mock_post.return_value.ok = True
+        self.mock_post.return_value = MagicMock()
+        self.mock_post.return_value.json.return_value = TestApi._open_test_data('post_campaign_blacklist')
+        data = json.loads(json.dumps({'masks': ['spam@sgmail.com', 'spamparam@gmail.com']}))
+
+        response = self.getresponse.post_campaign_blacklist('O', ['spam@sgmail.com', 'spamparam@gmail.com'])
+
+        self.assertEqual(response, data)
+        self.assertTrue(str(response).find('gmail.com') > 0)
+        self.assertTrue(len(response['masks']) == 2)
+
+    def test_get_campaigns_statistics_list_size(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_list_size')
+        data = json.loads(json.dumps([{'totalSubscribers': 3, 'addedSubscribers': 0}]))
+
+        response = self.getresponse.get_campaigns_statistics_list_size(['groupBy=month'], 'O',
+                                                                       fields='totalSubscribers,addedSubscribers')  # type: list[dict]
+
+        self.assertEqual(response, data)
+        self.assertTrue(len(response[0].keys()) == 2)
+
+    def test_get_campaigns_statistics_locations(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_locations')
+        data = json.loads(json.dumps({'RU': {'continentCode': 'EU', 'amount': '3', 'countryCode': 'RU'}}))
+
+        response = self.getresponse.get_campaigns_statistics_locations(['groupBy=month'], 'O')
+
+        self.assertEqual(response, data)
+
+    def test_get_campaigns_statistics_origins(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_origins')
+        data = json.loads(
+            '[{"2014-12-15":{"import":19,"email":18,"www":19,"panel":19,"leads":6,"sale":6,"api":9,"forward":25,"survey":14,"iphone":22,"copy":17,"landing_page":11,"summary":192},"2015-01-01":{"import":120,"email":126,"www":122,"panel":108,"leads":105,"sale":105,"api":138,"forward":127,"survey":107,"iphone":123,"copy":120,"landing_page":118,"summary":1444}}]')
+
+        response = self.getresponse.get_campaigns_statistics_origins(['groupBy=month'], 'O')
+
+        self.assertEqual(response, data)
+
+    def test_get_campaigns_statistics_removals(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_removals')
+        data = json.loads(json.dumps({'3': {'total': {'unsubscribe': 28, 'bounce': 21}}}))
+
+        response = self.getresponse.get_campaigns_statistics_removals(['groupBy=month'], 'O')
+
+        self.assertEqual(response, data)
+
+    def test_get_campaigns_statistics_subscriptions(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_subscriptions')
+        data = json.loads(json.dumps({'3': {'total': {'mobile': 0, 'survey': 0, 'panel': 0, 'api': 0, 'forward': 0, 'www': 0, 'leads': 0, 'import': 9905, 'sale': 0, 'copy': 0, 'landing_page': 0, 'summary': 9905, 'email': 0}}}
+))
+
+        response = self.getresponse.get_campaigns_statistics_subscriptions(['groupBy=total'], 'O')
+
+        self.assertEqual(response, data)
+
+    def test_get_campaigns_statistics_balance(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data(
+            'get_campaigns_statistics_balance')
+        data = json.loads(json.dumps({'total': {'removals': {'unsubscribe': 28, 'bounce': 21},
+                                                'subscriptions': {'landing_page': 0, 'leads': 0, 'sale': 0, 'survey': 0,
+                                                                  'panel': 0, 'api': 0, 'www': 0, 'forward': 0,
+                                                                  'copy': 0, 'email': 0, 'summary': 9905,
+                                                                  'import': 9905, 'mobile': 0}}}
+                                     ))
+
+        response = self.getresponse.get_campaigns_statistics_balance(['groupBy=total'], 'O')
+
+        self.assertEqual(response, data)
+
+    def test_get_campaigns_statistics_summary(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApi._open_test_data(
+            'get_campaigns_statistics_summary')
+        data = json.loads(json.dumps({'d': {'totalNewsletters': '1', 'totalLandingPages': '0', 'totalTriggers': '0', 'totalWebforms': '0', 'totalSubscribers': '0'}, '3': {'totalNewsletters': '12', 'totalLandingPages': '0', 'totalTriggers': '0', 'totalWebforms': '0', 'totalSubscribers': '9843'}}
+))
+
+        response = self.getresponse.get_campaigns_statistics_summary('3,d')
+        self.assertEqual(response, data)
+
 if __name__ == '__main__':
-    unittest.main()
+    nose.main()

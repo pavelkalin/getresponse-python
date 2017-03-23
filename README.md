@@ -61,6 +61,8 @@ print(campaigns)
 
 ```
 
+More examples can be found in examples/usage.py
+
 ## Description
 
 This API wrapper should mimic the original [documentation](http://apidocs.getresponse.com/v3/resources) <br />
@@ -75,6 +77,28 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 - [ ] full mapping for original API calls
 - [ ] more examples
 - [ ] live cases
+
+## API covered sections
+- [x] Campaigns
+- [ ] From-Fields
+- [ ] Custom Fields
+- [ ] Newsletters
+- [ ] Autoresponders
+- [ ] RSS Newsletters
+- [ ] Contacts
+- [ ] SearchContacts
+- [ ] Subscription Confirmations
+- [ ] Tags
+- [ ] Search Contacts Reference Manual
+- [ ] Accounts
+- [ ] Goals
+- [ ] Webforms
+- [ ] Forms
+- [ ] Landing pages
+- [ ] Suppressions
+- [ ] E-commerce
+- [ ] Multimedia
+- [ ] Marketing Automation
 
 ### Project tree
 
