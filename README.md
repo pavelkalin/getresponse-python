@@ -100,30 +100,6 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 - [ ] Multimedia
 - [ ] Marketing Automation
 
-### Project tree
-
-```
-|── LICENSE
-├── README.md
-├── examples
-│   └── usage.py
-├── getresponse
-│   └── getresponsev3.py
-├── requirements
-│   ├── base.txt
-│   ├── local.txt
-│   ├── production.txt
-│   └── staging.txt
-├── testdata
-│   ├── get_campaign_id.json
-│   └── get_campaigns.json
-│   └── post_campaign.json
-│   └── ...
-└── tests
-    └── tests.py
-
-```
-
 ### Author
 
 Pavel Kalinichenko <br /> [pavel.kalinichenko@getresponse.ru](mailto:pavel.kalinichenko@getresponse.ru) <br />

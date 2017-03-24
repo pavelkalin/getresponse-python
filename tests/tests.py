@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from mock import patch, MagicMock
 
-from getresponse.getresponsev3 import Campaigns
+from getresponse.getresponsev3 import Campaigns, FromFields
 
 API_ENDPOINT = os.getenv('API_ENDPOINT', None)
 API_KEY = os.getenv('API_KEY', None)
@@ -222,7 +222,7 @@ class TestApiCampaigns(TestCase):
         data = json.loads(json.dumps({'3': {
             'total': {'mobile': 0, 'survey': 0, 'panel': 0, 'api': 0, 'forward': 0, 'www': 0, 'leads': 0,
                       'import': 9905, 'sale': 0, 'copy': 0, 'landing_page': 0, 'summary': 9905, 'email': 0}}}
-                                     ))
+        ))
 
         response = self.getresponse.get_campaigns_statistics_subscriptions(['groupBy=total'], 'O')
 
@@ -271,7 +271,7 @@ class TestApiFrom(TestCase):
         cls.mock_get = cls.mock_get_patcher.start()
         cls.mock_post_patcher = patch('getresponse.getresponsev3.requests.post')
         cls.mock_post = cls.mock_post_patcher.start()
-        cls.getresponse = Campaigns(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
+        cls.getresponse = FromFields(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
 
     @classmethod
     def teardown_class(cls):
@@ -281,13 +281,28 @@ class TestApiFrom(TestCase):
     @staticmethod
     def _get_test_data_path(filename):
         directory = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        test_data_dir = os.path.join(directory, 'testdata/campaigns')
+        test_data_dir = os.path.join(directory, 'testdata/from_fields')
         return os.path.join(test_data_dir, filename)
 
     @staticmethod
     def _open_test_data(filename):
         with open(TestApiFrom._get_test_data_path(filename + '.json')) as f:
             return json.load(f)
+
+    def test_get_all(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApiFrom._open_test_data('all')
+        data = json.loads(json.dumps([{'createdOn': '2017-03-13T19:32:52+0000', 'name': 'VIP pam',
+                                       'email': 'info@domain.com', 'isActive': 'true', 'fromFieldId': 'e',
+                                       'isDefault': 'true', 'href': 'https://api3.getresponse360.pl/v3/from-fields/e'},
+                                      {'createdOn': '2017-03-13T19:24:59+0000', 'name': 'Nikolay',
+                                       'email': 'nikolay@example.ru', 'isActive': 'true', 'fromFieldId': '3',
+                                       'isDefault': 'false', 'href': 'https://api3.getresponse360.pl/v3/from-fields/3'}]
+                                     ))
+
+        response = self.getresponse.get_from_fields()
+        self.assertListEqual(response, data)
 
 
 if __name__ == '__main__':

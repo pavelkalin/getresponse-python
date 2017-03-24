@@ -50,8 +50,9 @@ class Campaigns(object):
     Class represents campaigns section of API
     http://apidocs.getresponse.com/v3/resources/campaigns
     """
+
     def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
-        self.getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+        self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
                                                     x_time_zone=x_time_zone)
 
     def get_campaigns(self, **kwargs):
@@ -64,12 +65,12 @@ class Campaigns(object):
         """
         r = None
         if not kwargs:
-            r = self.getresponse_client.get('/campaigns')
+            r = self._getresponse_client.get('/campaigns')
         elif 'name' in kwargs.keys():
             if 'options' in kwargs.keys():
-                r = self.getresponse_client.get('/campaigns?query[name]=' + kwargs['name'] + kwargs['options'])
+                r = self._getresponse_client.get('/campaigns?query[name]=' + kwargs['name'] + kwargs['options'])
             else:
-                r = self.getresponse_client.get('/campaigns?query[name]=' + kwargs['name'])
+                r = self._getresponse_client.get('/campaigns?query[name]=' + kwargs['name'])
         return r
 
     def get_campaign(self, campaign_id: str):
@@ -80,7 +81,7 @@ class Campaigns(object):
         :return: JSON response
         """
 
-        r = self.getresponse_client.get('/campaigns/' + campaign_id)
+        r = self._getresponse_client.get('/campaigns/' + campaign_id)
         return r
 
     @staticmethod
@@ -180,7 +181,7 @@ class Campaigns(object):
         data['name'] = name
         for key, value in kwargs.items():
             data[key] = value
-        r = self.getresponse_client.post('/campaigns', data=json.dumps(data))
+        r = self._getresponse_client.post('/campaigns', data=json.dumps(data))
         return r
 
     def update_campaign(self, campaign_id: str, **kwargs):
@@ -202,7 +203,7 @@ class Campaigns(object):
         data = defaultdict()
         for key, value in kwargs.items():
             data[key] = value
-        r = self.getresponse_client.post('/campaigns/' + campaign_id, data=json.dumps(data))
+        r = self._getresponse_client.post('/campaigns/' + campaign_id, data=json.dumps(data))
         return r
 
     def get_campaign_contacts(self, campaign_id: str, query: list = None, **kwargs):
@@ -241,7 +242,7 @@ class Campaigns(object):
             for key, value in kwargs.items():
                 url = url + str(key) + '=' + str(value) + '&'
         url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaign_blacklist(self, campaign_id: str, mask: str):
@@ -253,7 +254,7 @@ class Campaigns(object):
         :param mask: Blacklist mask to search for
         :return: JSON response
         """
-        r = self.getresponse_client.get('/campaigns/' + campaign_id + '/blacklists?query[mask]=' + mask)
+        r = self._getresponse_client.get('/campaigns/' + campaign_id + '/blacklists?query[mask]=' + mask)
         return r
 
     def post_campaign_blacklist(self, campaign_id: str, mask: list):
@@ -266,7 +267,7 @@ class Campaigns(object):
         :return: JSON response
         """
         data = {'masks': mask}
-        r = self.getresponse_client.post('/campaigns/' + campaign_id + '/blacklists', data=json.dumps(data))
+        r = self._getresponse_client.post('/campaigns/' + campaign_id + '/blacklists', data=json.dumps(data))
         return r
 
     @staticmethod
@@ -312,7 +313,7 @@ class Campaigns(object):
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaigns_statistics_locations(self, query: list, campaign_id: str, fields: str = None):
@@ -343,7 +344,7 @@ class Campaigns(object):
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaigns_statistics_origins(self, query: list, campaign_id: str, fields: str = None):
@@ -374,7 +375,7 @@ class Campaigns(object):
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaigns_statistics_removals(self, query: list, campaign_id: str, fields: str = None):
@@ -405,7 +406,7 @@ class Campaigns(object):
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaigns_statistics_subscriptions(self, query: list, campaign_id: str, fields: str = None):
@@ -436,7 +437,7 @@ class Campaigns(object):
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaigns_statistics_balance(self, query: list, campaign_id: str, fields: str = None):
@@ -467,7 +468,7 @@ class Campaigns(object):
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaigns_statistics_summary(self, campaign_id_list: str, fields: str = None):
@@ -484,7 +485,53 @@ class Campaigns(object):
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = self.getresponse_client.get(url)
+        r = self._getresponse_client.get(url)
+        return r
+
+
+class FromFields(object):
+    """
+    Class represents From fields section of API
+    http://apidocs.getresponse.com/v3/resources/fromfields
+    """
+
+    def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
+        self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+                                                    x_time_zone=x_time_zone)
+
+    def get_from_fields(self, query: list = None, **kwargs):
+        """
+        Get all from fields within account
+        http://apidocs.getresponse.com/v3/resources/fromfields#fromfields.get.all
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - name
+                        - email
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['name=Test', 'email=info@test.com' ]
+                        query = ['name=Test']
+        :param kwargs:
+                       - options: List of fields that should be returned. Fields should be separated by comma
+                       - sort: Enable sorting using specified field (set as a key) and order (set as a value).
+                               Can be:
+                                        - createdOn: - asc
+                                                     - desc
+                       - perPage: :rtype: Int
+                       Number results on page
+                       - page: :rtype: Int
+                       Page number
+        :return: JSON response
+        """
+        url = '/from-fields?'
+        if query:
+            for item in query:
+                query_data = str(item).split('=')
+                url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+        for key, value in kwargs.items():
+            url = url + key + '=' + value + '&'
+        r = self._getresponse_client.get(url)
         return r
 
 
