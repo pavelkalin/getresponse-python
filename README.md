@@ -19,7 +19,7 @@ _It is_
 ## Installing
 
 ```commandline
-git@github.com:pavelkalin/getresponse-python.git
+git clone https://github.com/pavelkalin/getresponse-python.git
 cd getresponse-python
 pip install -Ur requirements/production.txt
 ```
@@ -47,13 +47,13 @@ Obtain API_KEY, API_ENDPOINT and X_DOMAIN if GetResponse 360 is used. <br />
 For GetResponse it's enough to have just API_KEY and API_ENDPOINT <br />
 
 ```python
-from getresponse.getresponsev3 import Api
+from getresponse.getresponsev3 import Campaigns
 
 API_ENDPOINT = ''
 API_KEY = ''
 X_DOMAIN = ''
 
-getresponse = Api(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
+getresponse = Campaigns(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
 
 #to get list of all campagins within account
 campaigns = getresponse.get_campaigns()
@@ -102,7 +102,7 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 
 ### Project tree
 
-```commandline
+```
 |── LICENSE
 ├── README.md
 ├── examples
