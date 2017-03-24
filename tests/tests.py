@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from mock import patch, MagicMock
 
-from getresponse.getresponsev3 import Api
+from getresponse.getresponsev3 import Campaigns
 
 API_ENDPOINT = os.getenv('API_ENDPOINT', None)
 API_KEY = os.getenv('API_KEY', None)
@@ -17,8 +17,10 @@ HEADERS = os.getenv('HEADERS', None)
 
 
 @skipIf(not API_ENDPOINT and not API_KEY, 'No credentials provided')
-class TestApi(TestCase):
-    maxDiff = None
+class TestApiCampaigns(TestCase):
+    """
+    Test campaigns section of API
+    """
 
     @classmethod
     def setup_class(cls):
@@ -26,7 +28,7 @@ class TestApi(TestCase):
         cls.mock_get = cls.mock_get_patcher.start()
         cls.mock_post_patcher = patch('getresponse.getresponsev3.requests.post')
         cls.mock_post = cls.mock_post_patcher.start()
-        cls.getresponse = Api(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
+        cls.getresponse = Campaigns(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
 
     @classmethod
     def teardown_class(cls):
@@ -36,18 +38,18 @@ class TestApi(TestCase):
     @staticmethod
     def _get_test_data_path(filename):
         directory = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        test_data_dir = os.path.join(directory, 'testdata')
+        test_data_dir = os.path.join(directory, 'testdata/campaigns')
         return os.path.join(test_data_dir, filename)
 
     @staticmethod
     def _open_test_data(filename):
-        with open(TestApi._get_test_data_path(filename + '.json')) as f:
+        with open(TestApiCampaigns._get_test_data_path(filename + '.json')) as f:
             return json.load(f)
 
     def test_get_campaigns(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data('get_campaigns')
         data = json.loads(
             '[{"description": "nikolaysemenov", "href": "https://api3.getresponse360.pl/v3/campaigns/O","campaignId": "O", "name": "nikolaysemenov", "createdOn": "2017-03-13T19:24:59+0000","isDefault": "true", "languageCode": "RU"}]')
 
@@ -59,7 +61,7 @@ class TestApi(TestCase):
     def test_get_campaign(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaign_id')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data('get_campaign_id')
         data = json.loads(
             '{"name": "nikolaysemenov", "isDefault": "true", "profile": {"description": "", "title": "", "industryTagId": null, "logoLinkUrl": "", "logo": ""}, "createdOn": "2017-03-13T19:24:59+0000", "languageCode": "RU", "campaignId": "O", "postal": {"design": "[[name]], [[address]], [[city]], [[state]] [[zip]], [[country]]", "zipCode": "123456", "state": "NA", "companyName": "GetResponse", "street": "NA", "addPostalToMessages": "true", "city": "NA", "country": "\u0420\u043e\u0441\u0441\u0438\u0439\u0441\u043a\u0430\u044f \u0424\u0435\u0434\u0435\u0440\u0430\u0446\u0438\u044f"}, "href": "https://api3.getresponse360.pl/v3/campaigns/O", "optinTypes": {"webform": "double", "email": "double", "import": "single", "api": "double"}, "confirmation": {"mimeType": "text/html", "redirectUrl": null, "subscriptionConfirmationSubjectId": "e1mT", "subscriptionConfirmationBodyId": "e1IM", "redirectType": "hosted", "fromField": {"href": "https://api3.getresponse360.pl/v3/from-fields/3", "fromFieldId": "3"}, "replyTo": {"href": "https://api3.getresponse360.pl/v3/from-fields/3", "fromFieldId": "3"}}, "subscriptionNotifications": {"status": "enabled", "recipients": [{"href": "https://api3.getresponse360.pl/v3/from-fields/3", "fromFieldId": "3"}]}}')
 
@@ -71,7 +73,7 @@ class TestApi(TestCase):
     def test_post_campaign(self):
         self.mock_post.return_value.ok = True
         self.mock_post.return_value = MagicMock()
-        self.mock_post.return_value.json.return_value = TestApi._open_test_data('post_campaign')
+        self.mock_post.return_value.json.return_value = TestApiCampaigns._open_test_data('post_campaign')
         data = json.loads(json.dumps(
             {'languageCode': 'RU', 'confirmation': {'mimeType': 'text/html', 'replyTo': {'fromFieldId': 'e',
                                                                                          'href': 'https://api3.getresponse360.pl/v3/from-fields/e'},
@@ -98,7 +100,7 @@ class TestApi(TestCase):
     def test_update_campaign(self):
         self.mock_post.return_value.ok = True
         self.mock_post.return_value = MagicMock()
-        self.mock_post.return_value.json.return_value = TestApi._open_test_data('update_campaign')
+        self.mock_post.return_value.json.return_value = TestApiCampaigns._open_test_data('update_campaign')
         data = json.loads(json.dumps({'confirmation': {'redirectType': 'hosted',
                                                        'subscriptionConfirmationBodyId': 'e1IM',
                                                        'replyTo': {'fromFieldId': 'e',
@@ -124,9 +126,9 @@ class TestApi(TestCase):
                                       'createdOn': '2017-03-17T13:50:32+0000'}))
 
         response = self.getresponse.update_campaign(campaign_id='e',
-                                                    optinTypes=Api._get_option_types(email='single',
-                                                                                     import_type='single',
-                                                                                     webform='single'))
+                                                    optinTypes=Campaigns._get_option_types(email='single',
+                                                                                           import_type='single',
+                                                                                           webform='single'))
 
         self.assertEqual(response, data)
         self.assertEqual(response['campaignId'], data['campaignId'])
@@ -134,7 +136,7 @@ class TestApi(TestCase):
     def test_get_campaign_contacts(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaign_contacts')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data('get_campaign_contacts')
         data = json.loads(json.dumps([{'email': 'xxx@yandex.ru', 'name': 'Yandex', 'contactId': 'F'}]))
 
         response = self.getresponse.get_campaign_contacts('O', query=['email=ru'], fields='name,email,campaigns')
@@ -145,7 +147,7 @@ class TestApi(TestCase):
     def test_get_campaign_blacklist(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaign_blacklist')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data('get_campaign_blacklist')
         data = json.loads(json.dumps({'masks': ['spam-spam@gmail.com', 'spam@gmail.com']}))
 
         response = self.getresponse.get_campaign_blacklist('O', 'gmail.com')
@@ -156,7 +158,7 @@ class TestApi(TestCase):
     def test_post_campaign_blacklist(self):
         self.mock_post.return_value.ok = True
         self.mock_post.return_value = MagicMock()
-        self.mock_post.return_value.json.return_value = TestApi._open_test_data('post_campaign_blacklist')
+        self.mock_post.return_value.json.return_value = TestApiCampaigns._open_test_data('post_campaign_blacklist')
         data = json.loads(json.dumps({'masks': ['spam@sgmail.com', 'spamparam@gmail.com']}))
 
         response = self.getresponse.post_campaign_blacklist('O', ['spam@sgmail.com', 'spamparam@gmail.com'])
@@ -168,7 +170,8 @@ class TestApi(TestCase):
     def test_get_campaigns_statistics_list_size(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_list_size')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data(
+            'get_campaigns_statistics_list_size')
         data = json.loads(json.dumps([{'totalSubscribers': 3, 'addedSubscribers': 0}]))
 
         response = self.getresponse.get_campaigns_statistics_list_size(['groupBy=month'], 'O',
@@ -180,7 +183,8 @@ class TestApi(TestCase):
     def test_get_campaigns_statistics_locations(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_locations')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data(
+            'get_campaigns_statistics_locations')
         data = json.loads(json.dumps({'RU': {'continentCode': 'EU', 'amount': '3', 'countryCode': 'RU'}}))
 
         response = self.getresponse.get_campaigns_statistics_locations(['groupBy=month'], 'O')
@@ -190,7 +194,8 @@ class TestApi(TestCase):
     def test_get_campaigns_statistics_origins(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_origins')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data(
+            'get_campaigns_statistics_origins')
         data = json.loads(
             '[{"2014-12-15":{"import":19,"email":18,"www":19,"panel":19,"leads":6,"sale":6,"api":9,"forward":25,"survey":14,"iphone":22,"copy":17,"landing_page":11,"summary":192},"2015-01-01":{"import":120,"email":126,"www":122,"panel":108,"leads":105,"sale":105,"api":138,"forward":127,"survey":107,"iphone":123,"copy":120,"landing_page":118,"summary":1444}}]')
 
@@ -201,7 +206,8 @@ class TestApi(TestCase):
     def test_get_campaigns_statistics_removals(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_removals')
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data(
+            'get_campaigns_statistics_removals')
         data = json.loads(json.dumps({'3': {'total': {'unsubscribe': 28, 'bounce': 21}}}))
 
         response = self.getresponse.get_campaigns_statistics_removals(['groupBy=month'], 'O')
@@ -211,9 +217,12 @@ class TestApi(TestCase):
     def test_get_campaigns_statistics_subscriptions(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data('get_campaigns_statistics_subscriptions')
-        data = json.loads(json.dumps({'3': {'total': {'mobile': 0, 'survey': 0, 'panel': 0, 'api': 0, 'forward': 0, 'www': 0, 'leads': 0, 'import': 9905, 'sale': 0, 'copy': 0, 'landing_page': 0, 'summary': 9905, 'email': 0}}}
-))
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data(
+            'get_campaigns_statistics_subscriptions')
+        data = json.loads(json.dumps({'3': {
+            'total': {'mobile': 0, 'survey': 0, 'panel': 0, 'api': 0, 'forward': 0, 'www': 0, 'leads': 0,
+                      'import': 9905, 'sale': 0, 'copy': 0, 'landing_page': 0, 'summary': 9905, 'email': 0}}}
+                                     ))
 
         response = self.getresponse.get_campaigns_statistics_subscriptions(['groupBy=total'], 'O')
 
@@ -222,7 +231,7 @@ class TestApi(TestCase):
     def test_get_campaigns_statistics_balance(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data(
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data(
             'get_campaigns_statistics_balance')
         data = json.loads(json.dumps({'total': {'removals': {'unsubscribe': 28, 'bounce': 21},
                                                 'subscriptions': {'landing_page': 0, 'leads': 0, 'sale': 0, 'survey': 0,
@@ -238,13 +247,48 @@ class TestApi(TestCase):
     def test_get_campaigns_statistics_summary(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
-        self.mock_get.return_value.json.return_value = TestApi._open_test_data(
+        self.mock_get.return_value.json.return_value = TestApiCampaigns._open_test_data(
             'get_campaigns_statistics_summary')
-        data = json.loads(json.dumps({'d': {'totalNewsletters': '1', 'totalLandingPages': '0', 'totalTriggers': '0', 'totalWebforms': '0', 'totalSubscribers': '0'}, '3': {'totalNewsletters': '12', 'totalLandingPages': '0', 'totalTriggers': '0', 'totalWebforms': '0', 'totalSubscribers': '9843'}}
-))
+        data = json.loads(json.dumps({'d': {'totalNewsletters': '1', 'totalLandingPages': '0', 'totalTriggers': '0',
+                                            'totalWebforms': '0', 'totalSubscribers': '0'},
+                                      '3': {'totalNewsletters': '12', 'totalLandingPages': '0', 'totalTriggers': '0',
+                                            'totalWebforms': '0', 'totalSubscribers': '9843'}}
+                                     ))
 
         response = self.getresponse.get_campaigns_statistics_summary('3,d')
         self.assertEqual(response, data)
 
+
+@skipIf(not API_ENDPOINT and not API_KEY, 'No credentials provided')
+class TestApiFrom(TestCase):
+    """
+    Test campaigns section of API
+    """
+
+    @classmethod
+    def setup_class(cls):
+        cls.mock_get_patcher = patch('getresponse.getresponsev3.requests.get')
+        cls.mock_get = cls.mock_get_patcher.start()
+        cls.mock_post_patcher = patch('getresponse.getresponsev3.requests.post')
+        cls.mock_post = cls.mock_post_patcher.start()
+        cls.getresponse = Campaigns(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
+
+    @classmethod
+    def teardown_class(cls):
+        cls.mock_get_patcher.stop()
+        cls.mock_post_patcher.stop()
+
+    @staticmethod
+    def _get_test_data_path(filename):
+        directory = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        test_data_dir = os.path.join(directory, 'testdata/campaigns')
+        return os.path.join(test_data_dir, filename)
+
+    @staticmethod
+    def _open_test_data(filename):
+        with open(TestApiFrom._get_test_data_path(filename + '.json')) as f:
+            return json.load(f)
+
+
 if __name__ == '__main__':
-    nose.main()
+    nose.run()

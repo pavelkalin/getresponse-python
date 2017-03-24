@@ -4,7 +4,10 @@ from collections import defaultdict
 import json
 
 
-class Api(object):
+class GetresponseClient(object):
+    """
+    Base class which does requests calls
+    """
     API_ENDPOINT = 'https://api.getresponse.com/v3'
     API_KEY = None
     X_DOMAIN = None
@@ -33,6 +36,24 @@ class Api(object):
         else:
             self.HEADERS = {'X-Auth-Token': 'api-key ' + self.API_KEY, 'Content-Type': 'application/json'}
 
+    def get(self, url: str):
+        r = requests.get(self.API_ENDPOINT + url, headers=self.HEADERS)
+        return r.json()
+
+    def post(self, url: str, data: json):
+        r = requests.post(self.API_ENDPOINT + url, data=data, headers=self.HEADERS)
+        return r.json()
+
+
+class Campaigns(object):
+    """
+    Class represents campaigns section of API
+    http://apidocs.getresponse.com/v3/resources/campaigns
+    """
+    def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
+        self.getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+                                                    x_time_zone=x_time_zone)
+
     def get_campaigns(self, **kwargs):
         """
         Get all campaigns within account
@@ -43,14 +64,13 @@ class Api(object):
         """
         r = None
         if not kwargs:
-            r = requests.get(self.API_ENDPOINT + '/campaigns', headers=self.HEADERS)
+            r = self.getresponse_client.get('/campaigns')
         elif 'name' in kwargs.keys():
             if 'options' in kwargs.keys():
-                r = requests.get(self.API_ENDPOINT + '/campaigns?query[name]=' + kwargs['name'] + kwargs['options'],
-                                 headers=self.HEADERS)
+                r = self.getresponse_client.get('/campaigns?query[name]=' + kwargs['name'] + kwargs['options'])
             else:
-                r = requests.get(self.API_ENDPOINT + '/campaigns?query[name]=' + kwargs['name'], headers=self.HEADERS)
-        return r.json()
+                r = self.getresponse_client.get('/campaigns?query[name]=' + kwargs['name'])
+        return r
 
     def get_campaign(self, campaign_id: str):
         """
@@ -60,8 +80,8 @@ class Api(object):
         :return: JSON response
         """
 
-        r = requests.get(self.API_ENDPOINT + '/campaigns/' + campaign_id, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get('/campaigns/' + campaign_id)
+        return r
 
     @staticmethod
     def _get_confirmation(from_field: dict, reply_to: dict, redirect_type: str, redirect_url: str = None):
@@ -160,8 +180,8 @@ class Api(object):
         data['name'] = name
         for key, value in kwargs.items():
             data[key] = value
-        r = requests.post(self.API_ENDPOINT + '/campaigns', headers=self.HEADERS, data=json.dumps(data))
-        return r.json()
+        r = self.getresponse_client.post('/campaigns', data=json.dumps(data))
+        return r
 
     def update_campaign(self, campaign_id: str, **kwargs):
         """
@@ -182,8 +202,8 @@ class Api(object):
         data = defaultdict()
         for key, value in kwargs.items():
             data[key] = value
-        r = requests.post(self.API_ENDPOINT + '/campaigns/' + campaign_id, headers=self.HEADERS, data=json.dumps(data))
-        return r.json()
+        r = self.getresponse_client.post('/campaigns/' + campaign_id, data=json.dumps(data))
+        return r
 
     def get_campaign_contacts(self, campaign_id: str, query: list = None, **kwargs):
         """
@@ -208,7 +228,7 @@ class Api(object):
         :return: JSON response
         """
         q = False  # check whether there was a query in a call
-        url = str(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/contacts')
+        url = str('/campaigns/' + campaign_id + '/contacts')
         if query:
             url += '?'
             q = True
@@ -221,8 +241,8 @@ class Api(object):
             for key, value in kwargs.items():
                 url = url + str(key) + '=' + str(value) + '&'
         url = url[:-1]  # get rid of last &
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
     def get_campaign_blacklist(self, campaign_id: str, mask: str):
         """
@@ -233,9 +253,8 @@ class Api(object):
         :param mask: Blacklist mask to search for
         :return: JSON response
         """
-        r = requests.get(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/blacklists?query[mask]=' + mask,
-                         headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get('/campaigns/' + campaign_id + '/blacklists?query[mask]=' + mask)
+        return r
 
     def post_campaign_blacklist(self, campaign_id: str, mask: list):
         """
@@ -247,9 +266,8 @@ class Api(object):
         :return: JSON response
         """
         data = {'masks': mask}
-        r = requests.post(self.API_ENDPOINT + '/campaigns/' + campaign_id + '/blacklists',
-                          headers=self.HEADERS, data=json.dumps(data))
-        return r.json()
+        r = self.getresponse_client.post('/campaigns/' + campaign_id + '/blacklists', data=json.dumps(data))
+        return r
 
     @staticmethod
     def _prepare_url_from_query(url: str, query: list, campaign_id: str):
@@ -288,14 +306,14 @@ class Api(object):
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
         """
-        url = str(self.API_ENDPOINT + '/campaigns/statistics/list-size?')
-        url = Api._prepare_url_from_query(url, query, campaign_id)
+        url = str('/campaigns/statistics/list-size?')
+        url = Campaigns._prepare_url_from_query(url, query, campaign_id)
         if fields:
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
     def get_campaigns_statistics_locations(self, query: list, campaign_id: str, fields: str = None):
         """
@@ -319,14 +337,14 @@ class Api(object):
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
         """
-        url = str(self.API_ENDPOINT + '/campaigns/statistics/locations?')
-        url = Api._prepare_url_from_query(url, query, campaign_id)
+        url = str('/campaigns/statistics/locations?')
+        url = Campaigns._prepare_url_from_query(url, query, campaign_id)
         if fields:
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
     def get_campaigns_statistics_origins(self, query: list, campaign_id: str, fields: str = None):
         """
@@ -350,14 +368,14 @@ class Api(object):
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
         """
-        url = str(self.API_ENDPOINT + '/campaigns/statistics/origins?')
-        url = Api._prepare_url_from_query(url, query, campaign_id)
+        url = str('/campaigns/statistics/origins?')
+        url = Campaigns._prepare_url_from_query(url, query, campaign_id)
         if fields:
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
     def get_campaigns_statistics_removals(self, query: list, campaign_id: str, fields: str = None):
         """
@@ -381,14 +399,14 @@ class Api(object):
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
         """
-        url = str(self.API_ENDPOINT + '/campaigns/statistics/removals?')
-        url = Api._prepare_url_from_query(url, query, campaign_id)
+        url = str('/campaigns/statistics/removals?')
+        url = Campaigns._prepare_url_from_query(url, query, campaign_id)
         if fields:
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
     def get_campaigns_statistics_subscriptions(self, query: list, campaign_id: str, fields: str = None):
         """
@@ -412,14 +430,14 @@ class Api(object):
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
         """
-        url = str(self.API_ENDPOINT + '/campaigns/statistics/subscriptions?')
-        url = Api._prepare_url_from_query(url, query, campaign_id)
+        url = str('/campaigns/statistics/subscriptions?')
+        url = Campaigns._prepare_url_from_query(url, query, campaign_id)
         if fields:
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
     def get_campaigns_statistics_balance(self, query: list, campaign_id: str, fields: str = None):
         """
@@ -443,14 +461,14 @@ class Api(object):
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
         """
-        url = str(self.API_ENDPOINT + '/campaigns/statistics/balance?')
-        url = Api._prepare_url_from_query(url, query, campaign_id)
+        url = str('/campaigns/statistics/balance?')
+        url = Campaigns._prepare_url_from_query(url, query, campaign_id)
         if fields:
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
     def get_campaigns_statistics_summary(self, campaign_id_list: str, fields: str = None):
         """
@@ -460,15 +478,14 @@ class Api(object):
         :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
         :return: JSON response
         """
-        url = str(self.API_ENDPOINT + '/campaigns/statistics/summary?')
-        url = Api._prepare_url_from_query(url, [], campaign_id_list)
+        url = str('/campaigns/statistics/summary?')
+        url = Campaigns._prepare_url_from_query(url, [], campaign_id_list)
         if fields:
             url += 'fields=' + fields
         else:
             url = url[:-1]  # get rid of last &
-        print(url)
-        r = requests.get(url, headers=self.HEADERS)
-        return r.json()
+        r = self.getresponse_client.get(url)
+        return r
 
 
 if __name__ == '__main__':
