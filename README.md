@@ -61,7 +61,7 @@ print(campaigns)
 
 ```
 
-More examples can be found in examples/usage.py
+More examples can be found in examples/ folder
 
 ## Description
 
@@ -75,12 +75,12 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 - [ ] readthedocs
 - [ ] installing via pip 
 - [ ] full mapping for original API calls
-- [ ] more examples
+- [X] more examples
 - [ ] live cases
 
 ## API covered sections
 - [x] Campaigns
-- [ ] From-Fields
+- [X] From-Fields
 - [ ] Custom Fields
 - [ ] Newsletters
 - [ ] Autoresponders

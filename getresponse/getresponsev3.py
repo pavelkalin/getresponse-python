@@ -44,6 +44,13 @@ class GetresponseClient(object):
         r = requests.post(self.API_ENDPOINT + url, data=data, headers=self.HEADERS)
         return r.json()
 
+    def delete(self, url: str, data: json = None):
+        if data:
+            requests.delete(self.API_ENDPOINT + url, data=data, headers=self.HEADERS)
+        else:
+            requests.delete(self.API_ENDPOINT + url, headers=self.HEADERS)
+        return True
+
 
 class Campaigns(object):
     """
@@ -53,7 +60,7 @@ class Campaigns(object):
 
     def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
         self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
-                                                    x_time_zone=x_time_zone)
+                                                     x_time_zone=x_time_zone)
 
     def get_campaigns(self, **kwargs):
         """
@@ -224,8 +231,8 @@ class Campaigns(object):
             - fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
             - sort: Enable sorting using specified field (set as a key) and order (set as a value).
             multiple fields to sort by can be used.
-            - page: Specify which page of results return. :rtype: int
-            - perPage: Specify how many results per page should be returned :rtype: int
+            - page: Specify which page of results return. :type: int
+            - perPage: Specify how many results per page should be returned :type: int
         :return: JSON response
         """
         q = False  # check whether there was a query in a call
@@ -497,7 +504,7 @@ class FromFields(object):
 
     def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
         self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
-                                                    x_time_zone=x_time_zone)
+                                                     x_time_zone=x_time_zone)
 
     def get_from_fields(self, query: list = None, **kwargs):
         """
@@ -507,20 +514,21 @@ class FromFields(object):
                       If multiple parameters are specified then it uses AND logic.
                       Can be:
                         - name
-                        - email
+                        - email (should be full email as expression is strict equality)
                       Should be passed like this: query = ['email=searched query', ..]
                       Examples:
                         query = ['name=Test', 'email=info@test.com' ]
                         query = ['name=Test']
         :param kwargs:
-                       - options: List of fields that should be returned. Fields should be separated by comma
+                       - fields: :type: str
+                       List of fields that should be returned. Fields should be separated by comma
                        - sort: Enable sorting using specified field (set as a key) and order (set as a value).
                                Can be:
                                         - createdOn: - asc
                                                      - desc
-                       - perPage: :rtype: Int
+                       - perPage: :type: int
                        Number results on page
-                       - page: :rtype: Int
+                       - page: :type: int
                        Page number
         :return: JSON response
         """
@@ -534,6 +542,60 @@ class FromFields(object):
         r = self._getresponse_client.get(url)
         return r
 
+    def get_from_field(self, field_id: str, fields: str = None):
+        """
+        This method returns from field by fromfieldId.
+        http://apidocs.getresponse.com/v3/resources/fromfields#fromfields.get
+        :param field_id: Id of the field to return
+        :param fields: List of fields that should be returned. Fields should be separated by comma
+        :return: JSON response
+        """
+        url = '/from-fields/' + field_id
+        if fields:
+            url += '?fields=' + fields
+        r = self._getresponse_client.get(url)
+        return r
+
+    def post_from_field(self, name: str, email: str):
+        """
+        This request will create new from-field
+        http://apidocs.getresponse.com/v3/resources/fromfields#fromfields.create
+        :param name: Name connected to email address
+        :param email: Email
+        :return: JSON response
+        """
+        url = '/from-fields'
+        data = {'name': name, 'email': email}
+        r = self._getresponse_client.post(url, data=json.dumps(data))
+        return r
+
+    def delete_or_replace_from_field(self, from_field_id:str, replace_id: str=None):
+        """
+        This request removes fromField.
+        New fromFieldId could be passed in the body of this request, and it will replace removed from field.
+        http://apidocs.getresponse.com/v3/resources/fromfields#fromfields.delete
+        :param replace_id: Id of replacement from field
+        :return: true
+        """
+        url = '/from-fields/' + from_field_id
+        if replace_id:
+            data = {'fromFieldIdToReplaceWith': replace_id}
+            r = self._getresponse_client.delete(url, data=json.dumps(data))
+        else:
+            r = self._getresponse_client.delete(url)
+        return r
+
+    def make_default(self, from_field_id: str):
+        """
+        Make from field default
+        http://apidocs.getresponse.com/v3/resources/fromfields#fromfields.default
+        :param from_field_id: Id of from field
+        Field should be active, i.e. it's 'isActive' property should be set to 'true'
+        :return: JSON response
+        """
+        url = '/from-fields/' + from_field_id + '/default'
+        r = self._getresponse_client.post(url, data=None)
+        return r
 
 if __name__ == '__main__':
     import doctest

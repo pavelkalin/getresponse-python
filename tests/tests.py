@@ -271,12 +271,15 @@ class TestApiFrom(TestCase):
         cls.mock_get = cls.mock_get_patcher.start()
         cls.mock_post_patcher = patch('getresponse.getresponsev3.requests.post')
         cls.mock_post = cls.mock_post_patcher.start()
+        cls.mock_delete_patcher = patch('getresponse.getresponsev3.requests.delete')
+        cls.mock_delete = cls.mock_delete_patcher.start()
         cls.getresponse = FromFields(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
 
     @classmethod
     def teardown_class(cls):
         cls.mock_get_patcher.stop()
         cls.mock_post_patcher.stop()
+        cls.mock_delete_patcher.stop()
 
     @staticmethod
     def _get_test_data_path(filename):
@@ -289,7 +292,7 @@ class TestApiFrom(TestCase):
         with open(TestApiFrom._get_test_data_path(filename + '.json')) as f:
             return json.load(f)
 
-    def test_get_all(self):
+    def test_get_from_fields(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
         self.mock_get.return_value.json.return_value = TestApiFrom._open_test_data('all')
@@ -304,6 +307,46 @@ class TestApiFrom(TestCase):
         response = self.getresponse.get_from_fields()
         self.assertListEqual(response, data)
 
+    def test_get_from_field(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestApiFrom._open_test_data('get_from_field')
+        data = json.loads(json.dumps({'name': 'VIP', 'fromFieldId': 'e', 'email': 'info@xxx.ru'}))
+
+        response = self.getresponse.get_from_field('e')
+        self.assertEqual(response, data)
+        self.assertEqual(response['fromFieldId'], data['fromFieldId'])
+
+    def test_post_from_field(self):
+        self.mock_post.return_value.ok = True
+        self.mock_post.return_value = MagicMock()
+        self.mock_post.return_value.json.return_value = TestApiFrom._open_test_data('post_from_field')
+        data = json.loads(json.dumps(
+            {'fromFieldId': 'V', 'href': 'https://api3.getresponse360.pl/v3/from-fields/V', 'isDefault': 'false',
+             'isActive': 'false', 'name': 'Test', 'createdOn': '2017-03-25T15:08:43+0000', 'email': 'pavel@mail.ru'}
+        ))
+
+        response = self.getresponse.post_from_field('Test', 'pavel@mail.ru')
+        self.assertEqual(response, data)
+
+    def test_delete_or_replace_from_field(self):
+        self.mock_delete.return_value.ok = True
+        self.mock_delete.return_value = MagicMock()
+        self.mock_delete.return_value.json.return_value = TestApiFrom._open_test_data('delete_or_replace_from_field')
+        data = json.loads(json.dumps(True))
+
+        response = self.getresponse.delete_or_replace_from_field('3')
+        self.assertEqual(response, data)
+
+    def test_make_default(self):
+        self.mock_post.return_value.ok = True
+        self.mock_post.return_value = MagicMock()
+        self.mock_post.return_value.json.return_value = TestApiFrom._open_test_data('make_default')
+        data = json.loads(json.dumps({'email': 'info@mail.ru', 'createdOn': '2017-03-13T19:24:59+0000', 'fromFieldId': '3', 'isDefault': 'true', 'isActive': 'true', 'name': 'XXX', 'href': 'https://api3.getresponse360.pl/v3/from-fields/3'}
+))
+
+        response = self.getresponse.make_default('v')
+        self.assertEqual(response, data)
 
 if __name__ == '__main__':
     nose.run()
