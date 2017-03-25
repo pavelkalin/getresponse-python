@@ -333,7 +333,8 @@ class TestApiFrom(TestCase):
         self.mock_delete.return_value.ok = True
         self.mock_delete.return_value = MagicMock()
         self.mock_delete.return_value.json.return_value = TestApiFrom._open_test_data('delete_or_replace_from_field')
-        data = json.loads(json.dumps(True))
+        self.mock_delete.return_value.text = TestApiFrom._open_test_data('delete_or_replace_from_field')
+        data = json.loads(json.dumps({}))
 
         response = self.getresponse.delete_or_replace_from_field('3')
         self.assertEqual(response, data)
