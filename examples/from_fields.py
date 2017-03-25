@@ -30,6 +30,10 @@ print('List of all from fields is: \n {}'.format(from_fields))
 # print('Result of replacement of new from field is: \n {}'.format(
 #     getresponse.delete_or_replace_from_field(new_from_field['fromFieldId'], new_from_field2['fromFieldId'])))
 
+print('Result of replacement of new from field is: \n {}'.format(
+    getresponse.delete_or_replace_from_field('v')))
+
+
 # print('List of all from fields is: \n {}'.format(getresponse.get_from_fields()))
 
-print('Make another active from field as default: \n {}'.format(getresponse.make_default('3')))
+# print('Make another active from field as default: \n {}'.format(getresponse.make_default('3')))

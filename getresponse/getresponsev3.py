@@ -46,10 +46,10 @@ class GetresponseClient(object):
 
     def delete(self, url: str, data: json = None):
         if data:
-            requests.delete(self.API_ENDPOINT + url, data=data, headers=self.HEADERS)
+            r = requests.delete(self.API_ENDPOINT + url, data=data, headers=self.HEADERS)
         else:
-            requests.delete(self.API_ENDPOINT + url, headers=self.HEADERS)
-        return True
+            r = requests.delete(self.API_ENDPOINT + url, headers=self.HEADERS)
+        return r.text
 
 
 class Campaigns(object):
@@ -575,7 +575,7 @@ class FromFields(object):
         New fromFieldId could be passed in the body of this request, and it will replace removed from field.
         http://apidocs.getresponse.com/v3/resources/fromfields#fromfields.delete
         :param replace_id: Id of replacement from field
-        :return: true
+        :return: Empty response or error response
         """
         url = '/from-fields/' + from_field_id
         if replace_id:
