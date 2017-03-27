@@ -667,6 +667,68 @@ class CustomFields(object):
         r = self._getresponse_client.get(url)
         return r
 
+    def get_custom_field(self, field_id: str, fields: str = None):
+        """
+        Get custom field by id
+        http://apidocs.getresponse.com/v3/resources/customfields#customfields.get
+        :param field_id: Id of custom field
+        :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+        :return: JSON Response
+        """
+        url = '/custom-fields/' + field_id
+        if fields:
+            url += '?fields=' + fields
+        r = self._getresponse_client.get(url)
+        return r
+
+    def post_custom_field(self, name: str, type: str, hidden: bool, values: list):
+        """
+        Create custom field
+        http://apidocs.getresponse.com/v3/resources/customfields#customfields.create
+        :param name: Name of the custom field.
+        Should be:
+        - from 1 to 32 characters long
+        - be unique
+        - use only lowercase letters, underscores and digits
+        - not be equal to one of the merge words used in messages, i.e. name, email, campaign, twitter, facebook, buzz,
+          myspace, linkedin, digg, googleplus, pinterest, responder, campaign, change
+        :param type: Type of custom field value. Cane be text for example
+        :param hidden: Flag if custom field is visible to contact
+        :param values: List of assigned values (one or more - depending of customField type)
+        :return: JSON Response
+        """
+        url = '/custom-fields'
+        data = {'name': name, 'type': type, 'hidden': hidden, 'values': values}
+        r = self._getresponse_client.post(url, data=json.dumps(data))
+        return r
+
+    def delete_custom_field(self, field_id: str):
+        """
+        Delete custom field by id
+        http://apidocs.getresponse.com/v3/resources/customfields#customfields.delete
+        :param field_id: Id of custom field
+        :return Empty response or error response
+        """
+        url = '/custom-fields/' + field_id
+        r = self._getresponse_client.delete(url)
+        return r
+
+    def update_custom_field(self, field_id: str, hidden: bool, values: list = None):
+        """
+        Update custom field
+        http://apidocs.getresponse.com/v3/resources/customfields#customfields.update
+        :param hidden: Flag if custom field is visible to contact
+        :param values: List of assigned values (one or more - depending of customField type)
+        :return: JSON Response
+        """
+        url = '/custom-fields/' + field_id
+        if values:
+            data = {'hidden': hidden, 'values': values}
+        else:
+            data = {'hidden': hidden}
+        r = self._getresponse_client.post(url, data=json.dumps(data))
+        return r
+
 
 if __name__ == '__main__':
     import doctest

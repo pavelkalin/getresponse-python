@@ -387,7 +387,7 @@ class TestCustomFields(TestCase):
         with open(TestCustomFields._get_test_data_path(filename + '.json')) as f:
             return json.load(f)
 
-    def test_get_from_fields(self):
+    def test_get_custom_fields(self):
         self.mock_get.return_value.ok = True
         self.mock_get.return_value = MagicMock()
         self.mock_get.return_value.json.return_value = TestCustomFields._open_test_data('get_custom_fields')
@@ -414,6 +414,52 @@ class TestCustomFields(TestCase):
 
         response = self.getresponse.get_custom_fields()
         self.assertListEqual(response, data)
+
+    def test_get_custom_field(self):
+        self.mock_get.return_value.ok = True
+        self.mock_get.return_value = MagicMock()
+        self.mock_get.return_value.json.return_value = TestCustomFields._open_test_data('get_custom_field')
+        data = json.loads(json.dumps({'values': ['tedt'], 'type': 'text', 'fieldType': 'text',
+                                      'href': 'https://api3.getresponse360.pl/v3/custom-fields/g',
+                                      'valueType': 'string', 'name': 'aba', 'customFieldId': 'g', 'hidden': 'true'}
+                                     ))
+
+        response = self.getresponse.get_custom_field('g')
+        self.assertEqual(response, data)
+
+    def test_post_custom_field(self):
+        self.mock_post.return_value.ok = True
+        self.mock_post.return_value = MagicMock()
+        self.mock_post.return_value.json.return_value = TestCustomFields._open_test_data('post_custom_field')
+        data = json.loads(json.dumps(
+            {'name': 'qwer', 'customFieldId': 'b', 'valueType': 'string', 'hidden': 'false', 'type': 'text',
+             'values': ['qwe'], 'fieldType': 'text', 'href': 'https://api3.getresponse360.pl/v3/custom-fields/b'}
+            ))
+
+        response = self.getresponse.post_custom_field('qwer', 'text', False, ['qwe'])
+        self.assertEqual(response, data)
+
+    def test_delete_custom_field(self):
+        self.mock_delete.return_value.ok = True
+        self.mock_delete.return_value = MagicMock()
+        self.mock_delete.return_value.json.return_value = TestCustomFields._open_test_data('delete_custom_field')
+        self.mock_delete.return_value.text = TestCustomFields._open_test_data('delete_custom_field')
+        data = json.loads(json.dumps({}))
+
+        response = self.getresponse.delete_custom_field('3')
+        self.assertEqual(response, data)
+
+    def test_update_custom_field(self):
+        self.mock_post.return_value.ok = True
+        self.mock_post.return_value = MagicMock()
+        self.mock_post.return_value.json.return_value = TestCustomFields._open_test_data('update_custom_field')
+        data = json.loads(json.dumps(
+            {'customFieldId': 'i', 'hidden': 'false', 'href': 'https://api3.getresponse360.pl/v3/custom-fields/i',
+             'valueType': 'string', 'type': 'text', 'name': 'zzz', 'values': ['z'], 'fieldType': 'text'}
+            ))
+
+        response = self.getresponse.update_custom_field('i', False)
+        self.assertEqual(response, data)
 
 
 if __name__ == '__main__':

@@ -81,7 +81,7 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 ## API covered sections
 - [x] Campaigns
 - [X] From-Fields
-- [ ] Custom Fields
+- [X] Custom Fields
 - [ ] Newsletters
 - [ ] Autoresponders
 - [ ] RSS Newsletters
