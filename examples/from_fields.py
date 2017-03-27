@@ -13,6 +13,7 @@ getresponse = FromFields(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_
 
 from_fields = getresponse.get_from_fields()
 print('List of all from fields is: \n {}'.format(from_fields))
+print('List of all from fields is: \n {}'.format(getresponse.get_from_fields(sort='asc')))
 #
 # print('List of all from fields is: \n {}'.format(
 #     getresponse.get_from_fields(query=['email=info@mail.ru', 'name=VIP'], fields='email,name,fromFieldId')))
@@ -30,8 +31,8 @@ print('List of all from fields is: \n {}'.format(from_fields))
 # print('Result of replacement of new from field is: \n {}'.format(
 #     getresponse.delete_or_replace_from_field(new_from_field['fromFieldId'], new_from_field2['fromFieldId'])))
 
-print('Result of replacement of new from field is: \n {}'.format(
-    getresponse.delete_or_replace_from_field('v')))
+# print('Result of replacement of new from field is: \n {}'.format(
+#     getresponse.delete_or_replace_from_field('v')))
 
 
 # print('List of all from fields is: \n {}'.format(getresponse.get_from_fields()))

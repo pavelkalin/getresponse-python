@@ -62,22 +62,44 @@ class Campaigns(object):
         self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
                                                      x_time_zone=x_time_zone)
 
-    def get_campaigns(self, **kwargs):
+    def get_campaigns(self, query: list = None, sort: list = None, **kwargs):
         """
         Get all campaigns within account
         http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.get.all
-        :param kwargs: options: search string like page=1&perPage=100&sort[name]=asc
-                       name: campaign name
+        :param query: Used to search only resources that meets criteria. Can be:
+                                        - name
+            Should be passed like this: query = ['name=searched query', ..]
+            Examples:
+                    query = ['name=VIP']
+        :param sort: Enable sorting using specified field (set as a key) and order (set as a value).
+            multiple fields to sort by can be used. Can be:
+                                        - name: asc or desc
+                                        - createdOn: asc or desc
+
+            Should be passed like this: sort = ['name=asc', ..]
+            Examples:
+                    sort = ['name=asc','createdOn=desc']
+                    query = ['name=asc']
+        :param kwargs:
+            - fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+            - page: Specify which page of results return. :type: int
+            - perPage: Specify how many results per page should be returned :type: int
         :return: JSON response
         """
-        r = None
-        if not kwargs:
-            r = self._getresponse_client.get('/campaigns')
-        elif 'name' in kwargs.keys():
-            if 'options' in kwargs.keys():
-                r = self._getresponse_client.get('/campaigns?query[name]=' + kwargs['name'] + kwargs['options'])
-            else:
-                r = self._getresponse_client.get('/campaigns?query[name]=' + kwargs['name'])
+        url = str('/campaigns?')
+        if query:
+            for item in query:
+                query_data = str(item).split('=')
+                url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+        if sort:
+            for item in sort:
+                sort_data = str(item).split('=')
+                url = url + 'sort[' + sort_data[0] + ']=' + sort_data[1] + '&'
+        if kwargs:
+            for key, value in kwargs.items():
+                url = url + str(key) + '=' + str(value) + '&'
+        url = url[:-1]  # get rid of last &
+        r = self._getresponse_client.get(url)
         return r
 
     def get_campaign(self, campaign_id: str):
@@ -87,7 +109,6 @@ class Campaigns(object):
         :param campaign_id: Id of campaign
         :return: JSON response
         """
-
         r = self._getresponse_client.get('/campaigns/' + campaign_id)
         return r
 
@@ -213,7 +234,7 @@ class Campaigns(object):
         r = self._getresponse_client.post('/campaigns/' + campaign_id, data=json.dumps(data))
         return r
 
-    def get_campaign_contacts(self, campaign_id: str, query: list = None, **kwargs):
+    def get_campaign_contacts(self, campaign_id: str, query: list = None, sort: list = None, **kwargs):
         """
         Allows to retrieve all contacts from given campaigns. Standard sorting and filtering apply.
         http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.contacts.get
@@ -221,31 +242,38 @@ class Campaigns(object):
         :param query: Used to search only resources that meets criteria. Can be:
                                         - email
                                         - name
-                                        - createdOn[from]
-                                        - createdOn[to]
+                                        - createdOn][from]
+                                        - createdOn][to]
             Should be passed like this: query = ['email=searched query', ..]
             Examples:
-                    query = ['email=@gmail.com','createdOn[from]=2017-03-10']
-                    query = ['createdOn[from]=2017-03-10']
+                    query = ['email=@gmail.com','createdOn][from]=2017-03-10']
+                    query = ['createdOn][from]=2017-03-10']
+        :param sort: Enable sorting using specified field (set as a key) and order (set as a value).
+            multiple fields to sort by can be used. Can be:
+                                        - email: asc or desc
+                                        - name: asc or desc
+                                        - createdOn: asc or desc
+
+            Should be passed like this: sort = ['email=asc', ..]
+            Examples:
+                    sort = ['email=asc','createdOn=desc']
+                    query = ['name=asc']
         :param kwargs:
             - fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
-            - sort: Enable sorting using specified field (set as a key) and order (set as a value).
-            multiple fields to sort by can be used.
             - page: Specify which page of results return. :type: int
             - perPage: Specify how many results per page should be returned :type: int
         :return: JSON response
         """
-        q = False  # check whether there was a query in a call
-        url = str('/campaigns/' + campaign_id + '/contacts')
+        url = str('/campaigns/' + campaign_id + '/contacts?')
         if query:
-            url += '?'
-            q = True
             for item in query:
                 query_data = str(item).split('=')
                 url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+        if sort:
+            for item in sort:
+                sort_data = str(item).split('=')
+                url = url + 'sort[' + sort_data[0] + ']=' + sort_data[1] + '&'
         if kwargs:
-            if not q:
-                url += '?'
             for key, value in kwargs.items():
                 url = url + str(key) + '=' + str(value) + '&'
         url = url[:-1]  # get rid of last &
@@ -282,7 +310,7 @@ class Campaigns(object):
         """
         Method to populate url with query and campaign id
         :param url: str
-        :param query: list like this ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
+        :param query: list like this ['createdOn][from]=2017-03-10', 'groupBy=hour' ]
         :param campaign_id: Id of campaign.
         :return:
         """
@@ -304,12 +332,12 @@ class Campaigns(object):
                                             - day
                                             - month
                                             - total
-                        - createdOn[from] Date in YYYY-mm-dd
-                        - createdOn[to] Date in YYYY-mm-dd
+                        - createdOn][from] Date in YYYY-mm-dd
+                        - createdOn][to] Date in YYYY-mm-dd
                       Should be passed like this: query = ['email=searched query', ..]
                       Examples:
-                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
-                        query = ['createdOn[from]=2017-03-10']
+                        query = ['createdOn][from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn][from]=2017-03-10']
         :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
@@ -335,12 +363,12 @@ class Campaigns(object):
                                             - day
                                             - month
                                             - total
-                        - createdOn[from] Date in YYYY-mm-dd
-                        - createdOn[to] Date in YYYY-mm-dd
+                        - createdOn][from] Date in YYYY-mm-dd
+                        - createdOn][to] Date in YYYY-mm-dd
                       Should be passed like this: query = ['email=searched query', ..]
                       Examples:
-                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
-                        query = ['createdOn[from]=2017-03-10']
+                        query = ['createdOn][from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn][from]=2017-03-10']
         :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
@@ -366,12 +394,12 @@ class Campaigns(object):
                                             - day
                                             - month
                                             - total
-                        - createdOn[from] Date in YYYY-mm-dd
-                        - createdOn[to] Date in YYYY-mm-dd
+                        - createdOn][from] Date in YYYY-mm-dd
+                        - createdOn][to] Date in YYYY-mm-dd
                       Should be passed like this: query = ['email=searched query', ..]
                       Examples:
-                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
-                        query = ['createdOn[from]=2017-03-10']
+                        query = ['createdOn][from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn][from]=2017-03-10']
         :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
@@ -397,12 +425,12 @@ class Campaigns(object):
                                             - day
                                             - month
                                             - total
-                        - createdOn[from] Date in YYYY-mm-dd
-                        - createdOn[to] Date in YYYY-mm-dd
+                        - createdOn][from] Date in YYYY-mm-dd
+                        - createdOn][to] Date in YYYY-mm-dd
                       Should be passed like this: query = ['email=searched query', ..]
                       Examples:
-                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
-                        query = ['createdOn[from]=2017-03-10']
+                        query = ['createdOn][from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn][from]=2017-03-10']
         :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
@@ -428,12 +456,12 @@ class Campaigns(object):
                                             - day
                                             - month
                                             - total
-                        - createdOn[from] Date in YYYY-mm-dd
-                        - createdOn[to] Date in YYYY-mm-dd
+                        - createdOn][from] Date in YYYY-mm-dd
+                        - createdOn][to] Date in YYYY-mm-dd
                       Should be passed like this: query = ['email=searched query', ..]
                       Examples:
-                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
-                        query = ['createdOn[from]=2017-03-10']
+                        query = ['createdOn][from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn][from]=2017-03-10']
         :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
@@ -459,12 +487,12 @@ class Campaigns(object):
                                             - day
                                             - month
                                             - total
-                        - createdOn[from] Date in YYYY-mm-dd
-                        - createdOn[to] Date in YYYY-mm-dd
+                        - createdOn][from] Date in YYYY-mm-dd
+                        - createdOn][to] Date in YYYY-mm-dd
                       Should be passed like this: query = ['email=searched query', ..]
                       Examples:
-                        query = ['createdOn[from]=2017-03-10', 'groupBy=hour' ]
-                        query = ['createdOn[from]=2017-03-10']
+                        query = ['createdOn][from]=2017-03-10', 'groupBy=hour' ]
+                        query = ['createdOn][from]=2017-03-10']
         :param fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
         :param campaign_id: Id of campaign. For multiple campaigns can be separated by comma like O,323fD,ddeE
         :return: JSON response
@@ -538,7 +566,11 @@ class FromFields(object):
                 query_data = str(item).split('=')
                 url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
         for key, value in kwargs.items():
-            url = url + key + '=' + value + '&'
+            if key == 'sort':
+                url = url + key + '[createdOn]=' + value + '&'
+            else:
+                url = url + key + '=' + value + '&'
+        url = url[:-1]  # get rid of last & or ?
         r = self._getresponse_client.get(url)
         return r
 
@@ -569,7 +601,7 @@ class FromFields(object):
         r = self._getresponse_client.post(url, data=json.dumps(data))
         return r
 
-    def delete_or_replace_from_field(self, from_field_id:str, replace_id: str=None):
+    def delete_or_replace_from_field(self, from_field_id: str, replace_id: str = None):
         """
         This request removes fromField.
         New fromFieldId could be passed in the body of this request, and it will replace removed from field.
@@ -596,6 +628,45 @@ class FromFields(object):
         url = '/from-fields/' + from_field_id + '/default'
         r = self._getresponse_client.post(url, data=None)
         return r
+
+
+class CustomFields(object):
+    """
+    Class represents Custom fields section of API
+    http://apidocs.getresponse.com/v3/resources/customfields
+    """
+
+    def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
+        self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+                                                     x_time_zone=x_time_zone)
+
+    def get_custom_fields(self, **kwargs):
+        """
+        Get custom fields
+        http://apidocs.getresponse.com/v3/resources/customfields#customfields.get.all
+        :param kwargs:
+                - fields: :type: str
+                List of fields that should be returned. Fields should be separated by comma
+                - sort: Enable sorting using specified field (set as a key) and order (set as a value).
+                Can be:
+                        - name: - asc
+                                - desc
+                - perPage: :type: int
+                Number results on page
+                - page: :type: int
+                Page number
+        :return:
+        """
+        url = '/custom-fields?'
+        for key, value in kwargs.items():
+            if key == 'sort':
+                url = url + key + '[name]=' + value + '&'
+            else:
+                url = url + key + '=' + value + '&'
+        url = url[:-1]  # get rid of last & or ?
+        r = self._getresponse_client.get(url)
+        return r
+
 
 if __name__ == '__main__':
     import doctest
