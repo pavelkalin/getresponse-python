@@ -4,7 +4,7 @@ from collections import defaultdict
 import json
 
 
-class GetresponseClient(object):
+class GetresponseClient:
     """
     Base class which does requests calls
     """
@@ -52,7 +52,7 @@ class GetresponseClient(object):
         return r.text
 
 
-class Campaigns(object):
+class Campaigns:
     """
     Class represents campaigns section of API
     http://apidocs.getresponse.com/v3/resources/campaigns
@@ -550,10 +550,11 @@ class FromFields(object):
         :param kwargs:
                        - fields: :type: str
                        List of fields that should be returned. Fields should be separated by comma
-                       - sort: Enable sorting using specified field (set as a key) and order (set as a value).
+                       - sort: :type: str
+                       Enable sorting using specified field (set as a key) and order (set as a value).
                                Can be:
-                                        - createdOn: - asc
-                                                     - desc
+                                 - asc
+                                 - desc
                        - perPage: :type: int
                        Number results on page
                        - page: :type: int
@@ -630,7 +631,7 @@ class FromFields(object):
         return r
 
 
-class CustomFields(object):
+class CustomFields:
     """
     Class represents Custom fields section of API
     http://apidocs.getresponse.com/v3/resources/customfields
@@ -647,7 +648,8 @@ class CustomFields(object):
         :param kwargs:
                 - fields: :type: str
                 List of fields that should be returned. Fields should be separated by comma
-                - sort: Enable sorting using specified field (set as a key) and order (set as a value).
+                - sort: :type: str
+                Enable sorting using specified field (set as a key) and order (set as a value).
                 Can be:
                         - name: - asc
                                 - desc
@@ -681,7 +683,7 @@ class CustomFields(object):
         r = self._getresponse_client.get(url)
         return r
 
-    def post_custom_field(self, name: str, type: str, hidden: bool, values: list):
+    def post_custom_field(self, name: str, custom_type: str, hidden: bool, values: list):
         """
         Create custom field
         http://apidocs.getresponse.com/v3/resources/customfields#customfields.create
@@ -692,13 +694,13 @@ class CustomFields(object):
         - use only lowercase letters, underscores and digits
         - not be equal to one of the merge words used in messages, i.e. name, email, campaign, twitter, facebook, buzz,
           myspace, linkedin, digg, googleplus, pinterest, responder, campaign, change
-        :param type: Type of custom field value. Cane be text for example
+        :param custom_type: Type of custom field value. Cane be text for example
         :param hidden: Flag if custom field is visible to contact
         :param values: List of assigned values (one or more - depending of customField type)
         :return: JSON Response
         """
         url = '/custom-fields'
-        data = {'name': name, 'type': type, 'hidden': hidden, 'values': values}
+        data = {'name': name, 'type': custom_type, 'hidden': hidden, 'values': values}
         r = self._getresponse_client.post(url, data=json.dumps(data))
         return r
 
@@ -728,6 +730,199 @@ class CustomFields(object):
             data = {'hidden': hidden}
         r = self._getresponse_client.post(url, data=json.dumps(data))
         return r
+
+
+class Newsletters:
+    """
+    Class represents Newsletters section of API
+    http://apidocs.getresponse.com/v3/resources/newsletters
+    """
+
+    def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
+        self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+                                                     x_time_zone=x_time_zone)
+
+    def get_newsletters(self, query: list = None, **kwargs):
+        """
+        Get all newsletters within account
+        http://apidocs.getresponse.com/v3/resources/newsletters#newsletters.get.all
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - subject
+                        - status Can be:
+                                - scheduled
+                                - in_progress
+                                - finished
+                        - createdOn][from]
+                        - createdOn][to]
+                        - type Can be:
+                                - draft
+                                - broadcast
+                                - splittest
+                                - automation
+                        - campaignId Id of a campaign, multiple campaigns separated by comma allowed
+                      Should be passed like this: query = ['type=searched query', ..]
+                      Examples:
+                        query = ['subject=Test', 'type=broadcast' ]
+                        query = ['subject=Test']
+        :param kwargs:
+                       - fields: :type: str
+                       List of fields that should be returned. Fields should be separated by comma
+                       - sort: :type: str
+                       Enable sorting using specified field (set as a key) and order (set as a value).
+                               Can be:
+                                - asc
+                                - desc
+                       - perPage: :type: int
+                       Number results on page
+                       - page: :type: int
+                       Page number
+        :return: JSON response
+        """
+        url = '/newsletters?'
+        if query:
+            for item in query:
+                query_data = str(item).split('=')
+                url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+        for key, value in kwargs.items():
+            if key == 'sort':
+                url = url + key + '[createdOn]=' + value + '&'
+            else:
+                url = url + key + '=' + value + '&'
+        url = url[:-1]  # get rid of last & or ?
+        r = self._getresponse_client.get(url)
+        return r
+
+    def get_newsletter(self, newsletter_id: str, fields: str = None):
+        """
+        This method returns newsletter by newsletter_id
+        http://apidocs.getresponse.com/v3/resources/newsletters#newsletters.get
+        :param newsletter_id: Id of the newsletter to return
+        :param fields: :type: str
+        List of fields that should be returned. Fields should be separated by comma
+        :return: JSON response
+        """
+        url = '/newsletters/' + newsletter_id
+        if fields:
+            url += '?fields=' + fields
+        r = self._getresponse_client.get(url)
+        return r
+
+    def get_newsletters_statistics(self, query: list, **kwargs):
+        """
+        Get all newsletters within account
+        http://apidocs.getresponse.com/v3/resources/newsletters#newsletters.get.all
+        :param query: Used to search only resources that meets criteria.
+                      If multiple parameters are specified then it uses AND logic.
+                      Can be:
+                        - groupBy Can be:
+                                - total
+                                - hour
+                                - day
+                                - month
+                        - newsletterId List of newsletter resource ids. (string separated with ",")
+                        - campaignId List of campaign resource ids. (string separated with ",")
+                        - createdOn][from] Date YYYY-mm-dd
+                        - createdOn][to] Date YYYY-mm-dd
+
+                      Should be passed like this: query = ['email=searched query', ..]
+                      Examples:
+                        query = ['subject=Test', 'type=broadcast' ]
+                        query = ['subject=Test']
+        :param kwargs:
+                       - fields: :type: str
+                       List of fields that should be returned. Fields should be separated by comma
+                       - perPage: :type: int
+                       Number results on page
+                       - page: :type: int
+                       Page number
+        :return: JSON response
+        """
+        url = '/newsletters/statistics?'
+        for item in query:
+            query_data = str(item).split('=')
+            url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+        for key, value in kwargs.items():
+            url = url + key + '=' + value + '&'
+        url = url[:-1]  # get rid of last & or ?
+        r = self._getresponse_client.get(url)
+        return r
+
+    @staticmethod
+    def _prepare_content(html: str, plain: str):
+        """
+        Prepare content for post_post_newsletters
+        :param html: Html content of email
+        :param plain: Plain content of email
+        :return: dict
+        """
+        return {'html': html, 'plain': plain}
+
+    @staticmethod
+    def _prepare_attachment(file_name: str, content: str, mime_type: str):
+        """
+        Newsletter attachments, sum of attachments size cannot excess 400kb
+        :param file_name: File name
+        :param content: Base64 encoded file content
+        :param mime_type: File mime type
+        :return: dict
+        """
+        return {'fileName': file_name, 'content': content, 'mimeType': mime_type}
+
+    @staticmethod
+    def _prepare_send_settings(selected_campaigns: list = None, selected_segments: list = None,
+                               selected_suppressions: list = None, excluded_campaigns: list = None,
+                               excluded_segments: list = None, selected_contacts: list = None,
+                               time_travel: str = 'false',
+                               perfect_timing: str = 'false'):
+        """
+        Prepare send settings to be used in post_newsletters
+        :param selected_campaigns: List of selected campaigns ids
+        :param selected_segments: List of selected segments ids
+        :param selected_suppressions: List of selected suppressions ids
+        :param excluded_campaigns: List of excluded campaigns ids
+        :param excluded_segments: List of excluded segments ids
+        :param selected_contacts: List of selected contacts ids
+        :param time_travel: Use time travel functionality - message will be sent according to each recipient time zone.
+                            Possible values: true, false
+        :param perfect_timing: Use perfect timing functionality.
+                            Possible values: true, false
+        :return: dict
+        """
+        selected_campaigns = selected_campaigns or []
+        selected_segments = selected_segments or []
+        selected_suppressions = selected_suppressions or []
+        excluded_campaigns = excluded_campaigns or []
+        excluded_segments = excluded_segments or []
+        selected_contacts = selected_contacts or []
+        return {'selectedCampaigns': selected_campaigns, 'selectedSegments': selected_segments,
+                'selectedSuppressions': selected_suppressions, 'excludedCampaigns': excluded_campaigns,
+                'excludedSegments': excluded_segments, 'selectedContacts': selected_contacts, 'timeTravel': time_travel,
+                'perfectTiming': perfect_timing}
+
+    def post_newsletters(self, name: str, subject: str, from_field_id: str, campaign_id: dict, content: dict,
+                         send_settings: dict, newsletter_type: str = 'broadcast', editor: str = None,
+                         reply_to: str = None, flags: list = None, attachments: list = None):
+        """
+        Creates and queue sending of a new newsletter.
+        http://apidocs.getresponse.com/v3/resources/newsletters#newsletters.create
+        :param name: Name of the newsletter
+        :param subject: Subject of the newsletter
+        :param from_field_id: Email from field Id
+        :param campaign_id: Id of campaign to which newsletter belongs to
+        :param content: result of _prepare_content method
+        :param send_settings: result of _prepare_send_settings
+        :param newsletter_type: Type of a newsletter. If set to 'draft' then standard draft will be created.
+        :param editor: Describes how content was created. Possible values: 'getresponse' if content was created only in
+        Getresponse Web editor, 'plain' if content is only text and 'custom' if any changes to the html was made outside
+        Getresponse web editor
+        :param reply_to: Email from field Id to where reply to should go
+        :param flags: :type list Flags that message can contain. Possible values: openrate and clicktrack
+        :param attachments: :type list of result of _prepare_attachment
+        :return: JSON response
+        """
+        pass
 
 
 if __name__ == '__main__':

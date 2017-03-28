@@ -1,0 +1,28 @@
+[
+  {
+    "type": "broadcast",
+    "flags": "openrate,clicktrack",
+    "campaign": {
+      "campaignId": "O",
+      "href": "https://api3.getresponse360.pl/v3/campaigns/O",
+      "name": "nikolaysemenov"
+    },
+    "sendOn": "2017-03-13T19:36:24+0000",
+    "name": "vip_time_club_test",
+    "sendMetrics": {
+      "total": "5",
+      "status": "finished",
+      "sent": "5"
+    },
+    "editor": "getresponse",
+    "status": "enabled",
+    "createdOn": "2017-03-13T19:33:03+0000",
+    "sendSettings": {
+      "timeTravel": "false",
+      "perfectTiming": "false"
+    },
+    "subject": "Hi from VIP Time Club!",
+    "href": "https://api3.getresponse360.pl/v3/newsletters/d",
+    "newsletterId": "d"
+  }
+]
