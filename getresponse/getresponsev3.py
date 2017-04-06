@@ -850,7 +850,7 @@ class Newsletters:
         return r
 
     @staticmethod
-    def _prepare_content(html: str, plain: str):
+    def prepare_content(html: str, plain: str):
         """
         Prepare content for post_post_newsletters
         :param html: Html content of email
@@ -860,7 +860,7 @@ class Newsletters:
         return {'html': html, 'plain': plain}
 
     @staticmethod
-    def _prepare_attachment(file_name: str, content: str, mime_type: str):
+    def prepare_attachment(file_name: str, content: str, mime_type: str):
         """
         Newsletter attachments, sum of attachments size cannot excess 400kb
         :param file_name: File name
@@ -871,7 +871,7 @@ class Newsletters:
         return {'fileName': file_name, 'content': content, 'mimeType': mime_type}
 
     @staticmethod
-    def _prepare_send_settings(selected_campaigns: list = None, selected_segments: list = None,
+    def prepare_send_settings(selected_campaigns: list = None, selected_segments: list = None,
                                selected_suppressions: list = None, excluded_campaigns: list = None,
                                excluded_segments: list = None, selected_contacts: list = None,
                                time_travel: str = 'false',
@@ -901,11 +901,12 @@ class Newsletters:
                 'excludedSegments': excluded_segments, 'selectedContacts': selected_contacts, 'timeTravel': time_travel,
                 'perfectTiming': perfect_timing}
 
-    def post_newsletters(self, name: str, subject: str, from_field_id: str, campaign_id: dict, content: dict,
-                         send_settings: dict, newsletter_type: str = 'broadcast', editor: str = None,
+    def post_newsletters(self, name: str, subject: str, from_field_id: dict, campaign_id: dict, content: dict,
+                         send_settings: dict, newsletter_type: str = 'broadcast', editor: str = 'custom',
                          reply_to: str = None, flags: list = None, attachments: list = None):
         """
-        Creates and queue sending of a new newsletter.
+        Creates and queues sending a new newsletter.
+        This method has limit of 256 calls per day.
         http://apidocs.getresponse.com/v3/resources/newsletters#newsletters.create
         :param name: Name of the newsletter
         :param subject: Subject of the newsletter
@@ -922,7 +923,13 @@ class Newsletters:
         :param attachments: :type list of result of _prepare_attachment
         :return: JSON response
         """
-        pass
+        url = '/newsletters'
+        flags = flags or ['openrate', 'clicktrack']
+        data = {'name': name, 'type': newsletter_type, 'subject': subject, 'flags': flags, 'editor': editor,
+                'campaign': campaign_id, 'content': content, 'fromField': from_field_id, 'replyTo': reply_to,
+                'attachments': attachments, 'sendSettings': send_settings}
+        r = self._getresponse_client.post(url, data=json.dumps(data))
+        return r
 
 
 if __name__ == '__main__':
