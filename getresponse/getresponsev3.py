@@ -872,10 +872,10 @@ class Newsletters:
 
     @staticmethod
     def prepare_send_settings(selected_campaigns: list = None, selected_segments: list = None,
-                               selected_suppressions: list = None, excluded_campaigns: list = None,
-                               excluded_segments: list = None, selected_contacts: list = None,
-                               time_travel: str = 'false',
-                               perfect_timing: str = 'false'):
+                              selected_suppressions: list = None, excluded_campaigns: list = None,
+                              excluded_segments: list = None, selected_contacts: list = None,
+                              time_travel: str = 'false',
+                              perfect_timing: str = 'false'):
         """
         Prepare send settings to be used in post_newsletters
         :param selected_campaigns: List of selected campaigns ids
@@ -929,6 +929,104 @@ class Newsletters:
                 'campaign': campaign_id, 'content': content, 'fromField': from_field_id, 'replyTo': reply_to,
                 'attachments': attachments, 'sendSettings': send_settings}
         r = self._getresponse_client.post(url, data=json.dumps(data))
+        return r
+
+
+class Contacts:
+    """
+    Class represents contacts section of API
+    http://apidocs.getresponse.com/v3/resources/contacts
+    """
+
+    def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
+        self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+                                                     x_time_zone=x_time_zone)
+
+    def get_contacts(self, query: list = None, sort: list = None, **kwargs):
+        """
+        Allows to retrieve all contacts from given campaigns. Standard sorting and filtering apply.
+        http://apidocs.getresponse.com/v3/resources/campaigns#campaigns.contacts.get
+        :param campaign_id: Id of given campaign
+        :param query: Used to search only resources that meets criteria. Can be:
+                                        - email
+                                        - name
+                                        - createdOn][from]
+                                        - createdOn][to]
+                                        - changedOn][from]
+                                        - changedOn][to]
+                                        - campaignId
+                                        - origin
+            Should be passed like this: query = ['email=searched query', ..]
+            Examples:
+                    query = ['email=@gmail.com','createdOn][from]=2017-03-10']
+                    query = ['createdOn][from]=2017-03-10']
+        :param sort: Enable sorting using specified field (set as a key) and order (set as a value).
+            multiple fields to sort by can be used. Can be:
+                                        - email: asc or desc
+                                        - name: asc or desc
+                                        - createdOn: asc or desc
+
+            Should be passed like this: sort = ['email=asc', ..]
+            Examples:
+                    sort = ['email=asc','createdOn=desc']
+                    query = ['name=asc']
+        :param kwargs:
+            - fields: List of fields that should be returned. Id is always returned. Fields should be separated by comma
+            - page: Specify which page of results return. :type: int
+            - perPage: Specify how many results per page should be returned :type: int
+            - additionalFlags: exactMatch 
+            Additional flags parameter with value 'exactMatch' will search contacts with exact value of email and 
+            name provided in query string.
+            Without that flag matching is done via standard 'like' comparison, what could be sometimes slow.
+        :return: JSON response
+        """
+        url = str('/contacts?')
+        if query:
+            for item in query:
+                query_data = str(item).split('=')
+                url = url + 'query[' + query_data[0] + ']=' + query_data[1] + '&'
+        if sort:
+            for item in sort:
+                sort_data = str(item).split('=')
+                url = url + 'sort[' + sort_data[0] + ']=' + sort_data[1] + '&'
+        if kwargs:
+            for key, value in kwargs.items():
+                url = url + str(key) + '=' + str(value) + '&'
+        url = url[:-1]  # get rid of last &
+        r = self._getresponse_client.get(url)
+        return r
+
+    def post_contacts(self, email: str, campaign_id: str, **kwargs):
+        """
+        Create new contact
+        http://apidocs.getresponse.com/v3/resources/contacts#contacts.create
+        :param campaign_id: Campaign Id which has to be unique in whole GetResponse platform
+        :param email: Email of new contact
+        :param kwargs:
+                -name: Name of contact
+                -dayOfCycle: Day of autoresponder cycle
+                -customFieldValues: Collection of customFieldValues that should be assign to contact
+                -ipAddress: IP address of a contact
+        :return: JSON response
+        """
+        data = defaultdict()
+        data['email'] = email
+        data['campaign'] = defaultdict()
+        data['campaign']['campaignId'] = campaign_id
+        for key, value in kwargs.items():
+            data[key] = value
+        r = self._getresponse_client.post('/contacts', data=json.dumps(data))
+        return r
+
+    def update_contact_customs(self, contact_id: str, custom_fields: dict):
+        """
+        The method allows adding and updating contacts custom field values. This method does not remove custom fields.
+        http://apidocs.getresponse.com/v3/resources/contacts#contacts.upsert.custom-fields
+        :param contact_id: Contact id
+        :param custom_fields: Custom fields to update
+        :return: JSON response
+        """
+        r = self._getresponse_client.post('/contacts/' + contact_id + '/custom-fields', data=json.dumps(custom_fields))
         return r
 
 
