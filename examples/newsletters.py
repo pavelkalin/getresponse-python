@@ -18,18 +18,19 @@ def _open_test_data(filename):
 
 getresponse = Newsletters(api_endpoint=API_ENDPOINT, api_key=API_KEY, x_domain=X_DOMAIN)
 
-newsletters = getresponse.get_newsletters(sort='asc')
+newsletters = getresponse.get_newsletters(query=['type=draft'], sort='desc', perPage='100', page='1')
 print('List of all newsletters is: \n {}'.format(newsletters))
-
-newsletter = getresponse.get_newsletter('d')
-print('Newsletter with id {} is: \n {}'.format('d', newsletter))
-newsletter_stats = getresponse.get_newsletters_statistics(['newsletterId=d'])
-print('Newsletter stats of id {} is: \n {}'.format('d', newsletter_stats))
-
-newsletter_campaign = {'campaignId': 'e'}
-newsletter_from = {'fromFieldId': '3'}
-html = _open_test_data('newsletter')
-newsletter_content = Newsletters.prepare_content(html, '')
+print('NUmber of newsletters is: {}'.format(len(newsletters)))
+#
+# newsletter = getresponse.get_newsletter('d')
+# print('Newsletter with id {} is: \n {}'.format('d', newsletter))
+# newsletter_stats = getresponse.get_newsletters_statistics(['newsletterId=d'])
+# print('Newsletter stats of id {} is: \n {}'.format('d', newsletter_stats))
+#
+# newsletter_campaign = {'campaignId': 'e'}
+# newsletter_from = {'fromFieldId': '3'}
+# html = _open_test_data('newsletter')
+# newsletter_content = Newsletters.prepare_content(html, '')
 
 # newsletter_create = getresponse.post_newsletters('test', 'test auch', newsletter_from, newsletter_campaign,
 #                                                  newsletter_content, Newsletters.prepare_send_settings(

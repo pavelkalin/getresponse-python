@@ -2,6 +2,7 @@
 import requests
 from collections import defaultdict
 import json
+from json.decoder import JSONDecodeError
 
 
 class GetresponseClient:
@@ -42,7 +43,11 @@ class GetresponseClient:
 
     def post(self, url: str, data: json):
         r = requests.post(self.API_ENDPOINT + url, data=data, headers=self.HEADERS)
-        return r.json()
+        try:
+            result = r.json()
+        except JSONDecodeError:
+            result = r.text
+        return result
 
     def delete(self, url: str, data: json = None):
         if data:
@@ -1029,6 +1034,85 @@ class Contacts:
         r = self._getresponse_client.post('/contacts/' + contact_id + '/custom-fields', data=json.dumps(custom_fields))
         return r
 
+    def get_contact(self, contact_id: str):
+        """
+        Get contact by ID
+        http://apidocs.getresponse.com/v3/resources/contacts#contacts.get
+        :param contact_id: id of contact
+        :return: JSON response
+        """
+        url = str('/contacts/' + contact_id)
+        r = self._getresponse_client.get(url)
+        return r
+
+
+class SearchContacts:
+    """
+    Class represents search contacts section of API
+    http://apidocs.getresponse.com/v3/resources/search-contacts
+    """
+
+    def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
+        self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+                                                     x_time_zone=x_time_zone)
+
+    def get_contacts(self, search_contact_id: str):
+        """
+        Get contacts by search-contact id
+        http://apidocs.getresponse.com/v3/resources/search-contacts#search-contacts.contacts.get.all
+        :param search_contact_id: Id of segment
+        :return: JSON response
+        """
+        url = str('/search-contacts/' + search_contact_id + '/contacts')
+        r = self._getresponse_client.get(url)
+        return r
+
+    def get_segments(self):
+        """
+        Get list of segments
+        http://apidocs.getresponse.com/v3/resources/search-contacts
+        :return: JSON response
+                """
+        url = str('/search-contacts/')
+        r = self._getresponse_client.get(url)
+        return r
+
+
+class Imports:
+    """
+    Class represents imports section of API
+    http://apidocs.getresponse.com/v3/resources/imports
+    """
+
+    def __init__(self, api_endpoint: str, api_key: str, x_domain: str = None, x_time_zone: str = None):
+        self._getresponse_client = GetresponseClient(api_endpoint=api_endpoint, api_key=api_key, x_domain=x_domain,
+                                                     x_time_zone=x_time_zone)
+
+    def get_imports(self, query: str = None):
+        """
+        Get imports
+        http://apidocs.getresponse.com/v3/resources/imports#imports.get.all
+        :param query: Query for import
+            Examples:
+                qeury = 'query[campaignId]=0&fields=importId,status,createdOn
+        :return: JSON response
+        """
+        if query:
+            url = str('/imports?' + query)
+        else:
+            url = str('/imports')
+        r = self._getresponse_client.get(url)
+        return r
+
+    def get_import(self, import_id: str):
+        """
+        Get import by id
+        :param import_id: import id
+        :return:
+        """
+        url = str('/imports/' + import_id)
+        r = self._getresponse_client.get(url)
+        return r
 
 if __name__ == '__main__':
     import doctest

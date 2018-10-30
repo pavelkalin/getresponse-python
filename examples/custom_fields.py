@@ -6,6 +6,7 @@ from getresponse.getresponsev3 import CustomFields
 API_ENDPOINT = os.getenv('API_ENDPOINT', None)
 API_KEY = os.getenv('API_KEY', None)
 X_DOMAIN = os.getenv('X_DOMAIN', None)
+X_DOMAIN = 'email.life-style.io'
 X_TIME_ZONE = os.getenv('X_TIME_ZONE', None)
 HEADERS = os.getenv('HEADERS', None)
 
@@ -25,4 +26,4 @@ print('List of all custom fields is: \n {}'.format(getresponse.get_custom_fields
 
 # print('List of all custom fields is: \n {}'.format(getresponse.get_custom_fields(fields='name')))
 
-print('Result of update custom fields is: \n {}'.format(getresponse.update_custom_field('i', False)))
+# print('Result of update custom fields is: \n {}'.format(getresponse.update_custom_field('i', False)))
