@@ -102,5 +102,5 @@ At this stage please use it AS IS and consult with documentation [here](http://a
 
 ### Author
 
-Pavel Kalinichenko <br /> [pavel.kalinichenko@getresponse.ru](mailto:pavel.kalinichenko@getresponse.ru) <br />
+Pavel Kalinichenko <br />
  [pavel.kalinichenko@gmail.com](mailto:pavel.kalinichenko@gmail.com) 
